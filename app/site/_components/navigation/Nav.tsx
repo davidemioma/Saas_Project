@@ -6,7 +6,7 @@ import { ModeToggle } from "@/components/ModeTggle";
 
 const Nav = () => {
   return (
-    <div className="fixed top-0 inset-x-0 z-10 bg-background flex items-center justify-between p-4">
+    <div className="fixed top-0 inset-x-0 z-20 bg-background flex items-center justify-between p-4">
       <aside className="flex items-center gap-2">
         <Image
           src="./assets/plura-logo.svg"

@@ -1,3 +1,5 @@
+import { dark } from "@clerk/themes";
+import { ClerkProvider } from "@clerk/nextjs";
 import Nav from "./_components/navigation/Nav";
 
 export default function SiteLayout({
@@ -6,10 +8,12 @@ export default function SiteLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <div className="h-full">
-      <Nav />
+    <ClerkProvider appearance={{ baseTheme: dark }}>
+      <div className="h-full">
+        <Nav />
 
-      {children}
-    </div>
+        {children}
+      </div>
+    </ClerkProvider>
   );
 }
