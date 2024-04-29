@@ -1,7 +1,8 @@
 "use server";
 
+import { toast } from "sonner";
 import prismadb from "@/lib/prisma";
-import { User } from "@prisma/client";
+import { Agency, User } from "@prisma/client";
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
 
 export const getAuthUserDetails = async () => {
@@ -123,7 +124,9 @@ export const saveActivityLogNotification = async ({
       );
     }
   } catch (err) {
-    throw new Error("Something went wrong!");
+    console.log("Save activity log error" + err);
+
+    toast.error("Something went wrong!");
   }
 };
 
@@ -203,5 +206,149 @@ export const verifyAndAcceptInvitation = async () => {
     }
   } catch (err) {
     return null;
+  }
+};
+
+export const updateAgencyDetails = async ({
+  agencyId,
+  agencyDetail,
+}: {
+  agencyId: string;
+  agencyDetail: Partial<Agency>;
+}) => {
+  try {
+    const agency = await prismadb.agency.update({
+      where: {
+        id: agencyId,
+      },
+      data: {
+        ...agencyDetail,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return agency;
+  } catch (err) {
+    console.log("Update Agency" + err);
+
+    toast.error("Unable to update agency details");
+  }
+};
+
+export const initUser = async (newUser: Partial<User>) => {
+  try {
+    const user = await currentUser();
+
+    if (!user) return;
+
+    await prismadb.user.upsert({
+      where: {
+        email: user.emailAddresses[0].emailAddress,
+      },
+      update: newUser,
+      create: {
+        id: user.id,
+        avatarUrl: user.imageUrl,
+        name: `${user.firstName} ${user.lastName}`,
+        email: user.emailAddresses[0].emailAddress,
+        role: newUser.role || "SUBACCOUNT_USER",
+      },
+    });
+
+    await clerkClient.users.updateUserMetadata(user.id, {
+      privateMetadata: {
+        role: newUser.role || "SUBACCOUNT_USER",
+      },
+    });
+  } catch (err) {
+    console.log("Init user" + err);
+
+    toast.error("Unable to create/update user");
+  }
+};
+
+export const createOrUpdateAgency = async (agency: Agency) => {
+  try {
+    if (!agency.companyEmail) return null;
+
+    const agencyDetail = await prismadb.agency.upsert({
+      where: {
+        id: agency.id,
+      },
+      update: {
+        ...agency,
+      },
+      create: {
+        ...agency,
+        users: {
+          connect: {
+            email: agency.companyEmail,
+          },
+        },
+        sidebarOptions: {
+          create: [
+            {
+              name: "Dashboard",
+              icon: "category",
+              link: `/agency/${agency.id}`,
+            },
+            {
+              name: "Launchpad",
+              icon: "clipboardIcon",
+              link: `/agency/${agency.id}/launchpad`,
+            },
+            {
+              name: "Billing",
+              icon: "payment",
+              link: `/agency/${agency.id}/billing`,
+            },
+            {
+              name: "Settings",
+              icon: "settings",
+              link: `/agency/${agency.id}/settings`,
+            },
+            {
+              name: "Sub Accounts",
+              icon: "person",
+              link: `/agency/${agency.id}/all-subaccounts`,
+            },
+            {
+              name: "Team",
+              icon: "shield",
+              link: `/agency/${agency.id}/team`,
+            },
+          ],
+        },
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    return agencyDetail;
+  } catch (err) {
+    console.log("Create/Update Agency" + err);
+
+    toast.error("Unable to create/update agency");
+
+    return null;
+  }
+};
+
+export const deleteAgency = async ({ agencyId }: { agencyId: string }) => {
+  try {
+    //todo: Cancel the subscription
+
+    await prismadb.agency.delete({
+      where: {
+        id: agencyId,
+      },
+    });
+  } catch (err) {
+    console.log("Delete Agency" + err);
+
+    toast.error("Unable to delete agency details");
   }
 };

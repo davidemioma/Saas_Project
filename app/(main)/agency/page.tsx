@@ -52,7 +52,7 @@ export default async function Agency({
   return (
     <div className="flex justify-center items-center mt-5">
       <div className="max-w-[850px] border p-4 rounded-xl">
-        <h1 className="text-4xl">Create An Agency</h1>
+        <h1 className="text-4xl mb-5">Create An Agency</h1>
 
         <AgencyDetails
           data={{ companyEmail: user.emailAddresses[0].emailAddress }}
