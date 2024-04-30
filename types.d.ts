@@ -8,13 +8,17 @@ import {
 } from "@prisma/client";
 
 export type SubAccountProps = SubAccount & {
-  sidebarOptions: SubAccountSidebarOption;
+  sidebarOptions: SubAccountSidebarOption[];
 };
 
+export type AgencyProps =
+  | (Agency & {
+      sidebarOptions: AgencySidebarOption[];
+      subAccounts: SubAccountProps[];
+    })
+  | null;
+
 export type AuthUser = User & {
-  agency: Agency & {
-    sidebarOptions: AgencySidebarOption;
-    subAccounts: SubAccountProps[];
-  };
+  agency: AgencyProps;
   permissions: Permission[];
 };

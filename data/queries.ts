@@ -352,3 +352,29 @@ export const deleteAgency = async ({ agencyId }: { agencyId: string }) => {
     toast.error("Unable to delete agency details");
   }
 };
+
+export const getNotificationsAndUser = async ({
+  agencyId,
+}: {
+  agencyId: string;
+}) => {
+  try {
+    if (!agencyId) return [];
+
+    const notifications = await prismadb.notification.findMany({
+      where: {
+        id: agencyId,
+      },
+      include: {
+        user: true,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return notifications;
+  } catch (err) {
+    return [];
+  }
+};

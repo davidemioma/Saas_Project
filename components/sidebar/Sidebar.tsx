@@ -1,5 +1,6 @@
-import { AuthUser } from "@/types";
 import React from "react";
+import { AuthUser } from "@/types";
+import SidebarOptions from "./SidebarOptions";
 
 type Props = {
   id: string;
@@ -17,7 +18,7 @@ const Sidebar = ({ id, user, type }: Props) => {
       ? user?.agency
       : user?.agency.subAccounts.find((subaccount) => subaccount.id === id);
 
-  if (details) {
+  if (!details) {
     return null;
   }
 
@@ -48,7 +49,28 @@ const Sidebar = ({ id, user, type }: Props) => {
     )
   );
 
-  return <div>Sidebar</div>;
+  return (
+    <>
+      <SidebarOptions
+        id={id}
+        user={user}
+        details={details}
+        sidebarLogo={sideBarLogo}
+        defaultOpen={true}
+        subAccounts={subaccounts}
+        sidebarOpt={sidebarOpt}
+      />
+
+      <SidebarOptions
+        id={id}
+        user={user}
+        details={details}
+        sidebarLogo={sideBarLogo}
+        subAccounts={subaccounts}
+        sidebarOpt={sidebarOpt}
+      />
+    </>
+  );
 };
 
 export default Sidebar;
