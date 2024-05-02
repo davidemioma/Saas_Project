@@ -1,4 +1,6 @@
+import InfoBar from "@/components/InfoBar";
 import { redirect } from "next/navigation";
+import BlurPage from "@/components/BlurPage";
 import { currentUser } from "@clerk/nextjs/server";
 import Sidebar from "@/components/sidebar/Sidebar";
 import Unauthorised from "@/components/Unauthorised";
@@ -42,7 +44,13 @@ export default async function AgencyUserLayout({
     <div className="h-screen overflow-hidden">
       <Sidebar id={params.agencyId} user={userDetails} type="agency" />
 
-      <div className="md:pl-[300px]">{children}</div>
+      <div className="md:pl-[300px]">
+        <InfoBar notifications={notifications} />
+
+        <div className="relative">
+          <BlurPage>{children}</BlurPage>
+        </div>
+      </div>
     </div>
   );
 }

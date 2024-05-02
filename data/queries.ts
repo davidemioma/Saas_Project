@@ -1,8 +1,10 @@
 "use server";
 
+import { v4 } from "uuid";
 import { toast } from "sonner";
 import prismadb from "@/lib/prisma";
-import { Agency, User } from "@prisma/client";
+import { UserValidator } from "@/lib/validators/user";
+import { Agency, SubAccount, User } from "@prisma/client";
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
 
 export const getAuthUserDetails = async () => {
@@ -376,5 +378,227 @@ export const getNotificationsAndUser = async ({
     return notifications;
   } catch (err) {
     return [];
+  }
+};
+
+export const createOrUpdateSubAccount = async (subAccount: SubAccount) => {
+  try {
+    if (!subAccount.companyEmail) return null;
+
+    const agencyOwner = await prismadb.user.findFirst({
+      where: {
+        agency: {
+          id: subAccount.agencyId,
+        },
+        role: "AGENCY_OWNER",
+      },
+    });
+
+    if (!agencyOwner) {
+      throw new Error("Error, Could not find agency owner!");
+    }
+
+    const permissionId = v4();
+
+    const res = await prismadb.subAccount.upsert({
+      where: {
+        id: subAccount.id,
+      },
+      update: {
+        ...subAccount,
+      },
+      create: {
+        ...subAccount,
+        permissions: {
+          create: {
+            id: permissionId,
+            access: true,
+            email: agencyOwner.email,
+          },
+          connect: {
+            id: permissionId,
+            subAccountId: subAccount.id,
+          },
+        },
+        pipelines: {
+          create: { name: "Lead Cycle" },
+        },
+        sidebarOptions: {
+          create: [
+            {
+              name: "Launchpad",
+              icon: "clipboardIcon",
+              link: `/subaccount/${subAccount.id}/launchpad`,
+            },
+            {
+              name: "Settings",
+              icon: "settings",
+              link: `/subaccount/${subAccount.id}/settings`,
+            },
+            {
+              name: "Funnels",
+              icon: "pipelines",
+              link: `/subaccount/${subAccount.id}/funnels`,
+            },
+            {
+              name: "Media",
+              icon: "database",
+              link: `/subaccount/${subAccount.id}/media`,
+            },
+            {
+              name: "Automations",
+              icon: "chip",
+              link: `/subaccount/${subAccount.id}/automations`,
+            },
+            {
+              name: "Pipelines",
+              icon: "flag",
+              link: `/subaccount/${subAccount.id}/pipelines`,
+            },
+            {
+              name: "Contacts",
+              icon: "person",
+              link: `/subaccount/${subAccount.id}/contacts`,
+            },
+            {
+              name: "Dashboard",
+              icon: "category",
+              link: `/subaccount/${subAccount.id}`,
+            },
+          ],
+        },
+      },
+      select: {
+        id: true,
+        agencyId: true,
+        name: true,
+      },
+    });
+
+    return res;
+  } catch (err) {
+    console.log("Create/Update Sub account" + err);
+
+    toast.error("Unable to create/update sub account");
+
+    return null;
+  }
+};
+
+export const getUserPermissions = async ({ userId }: { userId: string }) => {
+  try {
+    if (!userId) return [];
+
+    const user = await prismadb.user.findUnique({
+      where: {
+        id: userId,
+      },
+      select: {
+        permissions: {
+          include: {
+            subAccount: true,
+          },
+        },
+      },
+    });
+
+    if (!user?.permissions) {
+      return [];
+    }
+
+    return user.permissions;
+  } catch (err) {
+    return [];
+  }
+};
+
+export const updateUser = async (values: UserValidator) => {
+  try {
+    const user = await currentUser();
+
+    if (!user) {
+      throw new Error(
+        "Unauthorised, You need to be logged in to perform this action"
+      );
+    }
+
+    const userExists = await prismadb.user.findUnique({
+      where: {
+        email: user.emailAddresses[0].emailAddress,
+      },
+    });
+
+    if (!userExists) {
+      throw new Error("Unauthorised, User not found");
+    }
+
+    await prismadb.user.update({
+      where: {
+        email: user.emailAddresses[0].emailAddress,
+      },
+      data: {
+        ...values,
+      },
+    });
+
+    await clerkClient.users.updateUserMetadata(user.id, {
+      privateMetadata: {
+        role: values.role || "SUBACCOUNT_USER",
+      },
+    });
+  } catch (err) {
+    console.log("UPDATE_USER", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const changeUserPermissions = async ({
+  subAccountId,
+  permissionsId,
+  agencyId,
+  adminOwnerName,
+  email,
+  access,
+  type,
+}: {
+  subAccountId: string;
+  permissionsId: string;
+  agencyId: string;
+  adminOwnerName: string;
+  email: string;
+  access: boolean;
+  type: "agency" | "subaccount";
+}) => {
+  try {
+    const permission = await prismadb.permission.upsert({
+      where: { id: permissionsId },
+      update: { access },
+      create: {
+        access,
+        email,
+        subAccountId: subAccountId,
+      },
+      select: {
+        subAccount: {
+          select: {
+            id: true,
+            name: true,
+          },
+        },
+      },
+    });
+
+    if (type === "agency") {
+      await saveActivityLogNotification({
+        agencyId,
+        description: `Gave ${adminOwnerName} access to | ${permission.subAccount.name} `,
+        subAccountId: permission.subAccount.id,
+      });
+    }
+  } catch (err) {
+    console.log("CHANGE_PERMISSION", err);
+
+    throw new Error(`Something went wrong ${err}`);
   }
 };
