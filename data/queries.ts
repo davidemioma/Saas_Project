@@ -365,7 +365,7 @@ export const getNotificationsAndUser = async ({
 
     const notifications = await prismadb.notification.findMany({
       where: {
-        id: agencyId,
+        agencyId,
       },
       include: {
         user: true,
@@ -381,7 +381,13 @@ export const getNotificationsAndUser = async ({
   }
 };
 
-export const createOrUpdateSubAccount = async (subAccount: SubAccount) => {
+export const createOrUpdateSubAccount = async ({
+  subAccount,
+  userName,
+}: {
+  subAccount: SubAccount;
+  userName: string;
+}) => {
   try {
     if (!subAccount.companyEmail) return null;
 
@@ -475,7 +481,11 @@ export const createOrUpdateSubAccount = async (subAccount: SubAccount) => {
       },
     });
 
-    return res;
+    await saveActivityLogNotification({
+      agencyId: res.agencyId,
+      subAccountId: res.id,
+      description: `${userName} | updated sub account | ${res.name}`,
+    });
   } catch (err) {
     console.log("Create/Update Sub account" + err);
 
@@ -598,6 +608,58 @@ export const changeUserPermissions = async ({
     }
   } catch (err) {
     console.log("CHANGE_PERMISSION", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const deleteSubAccount = async (
+  subAccountId: string | null | undefined
+) => {
+  try {
+    if (!subAccountId) {
+      throw new Error("Sub account ID required!");
+    }
+
+    const subAccount = await prismadb.subAccount.findUnique({
+      where: {
+        id: subAccountId,
+      },
+    });
+
+    if (!subAccount) {
+      throw new Error("Sub account not found!");
+    }
+
+    await saveActivityLogNotification({
+      agencyId: undefined,
+      description: `Deleted a subaccount | ${subAccount?.name}`,
+      subAccountId,
+    });
+
+    await prismadb.subAccount.delete({
+      where: {
+        id: subAccountId,
+      },
+    });
+  } catch (err) {
+    console.log("DELETE_SUBACCOUNT", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const removeUser = async (userId: string) => {
+  try {
+    await clerkClient.users.updateUserMetadata(userId, {
+      privateMetadata: {
+        role: undefined,
+      },
+    });
+
+    await prismadb.user.delete({ where: { id: userId } });
+  } catch (err) {
+    console.log("DELETE_USER", err);
 
     throw new Error(`Something went wrong ${err}`);
   }

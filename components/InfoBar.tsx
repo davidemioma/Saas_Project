@@ -47,7 +47,7 @@ const InfoBar = ({ className, notifications }: Props) => {
               <SheetDescription>View all notifications</SheetDescription>
             </SheetHeader>
 
-            <ScrollArea>
+            <ScrollArea className="pt-5">
               {notifications.length > 0 ? (
                 <div className="space-y-3">
                   {notifications.map((notification) => (

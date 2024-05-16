@@ -81,33 +81,24 @@ const SubAccountDetails = ({
       }
 
       const res = await createOrUpdateSubAccount({
-        id: details?.id ? details.id : v4(),
-        agencyId: agencyDetails?.id,
-        address: values.address,
-        city: values.city,
-        companyPhone: values.companyPhone,
-        country: values.country,
-        subAccountLogo: values.subAccountLogo,
-        name: values.name,
-        state: values.state,
-        zipCode: values.zipCode,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        companyEmail: values.companyEmail,
-        connectAccountId: "",
-        goal: 5000,
-      });
-
-      if (!res) {
-        toast.error("Could not create your sub account! Try again later.");
-
-        return;
-      }
-
-      await saveActivityLogNotification({
-        agencyId: res.agencyId,
-        subAccountId: res.id,
-        description: `${userName} | updated sub account | ${res.name}`,
+        subAccount: {
+          id: details?.id ? details.id : v4(),
+          agencyId: agencyDetails?.id,
+          address: values.address,
+          city: values.city,
+          companyPhone: values.companyPhone,
+          country: values.country,
+          subAccountLogo: values.subAccountLogo,
+          name: values.name,
+          state: values.state,
+          zipCode: values.zipCode,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          companyEmail: values.companyEmail,
+          connectAccountId: "",
+          goal: 5000,
+        },
+        userName,
       });
 
       toast.success(`Sub account ${details?.id ? "Updated" : "Created"}!`);
@@ -158,11 +149,11 @@ const SubAccountDetails = ({
                 name="name"
                 render={({ field }) => (
                   <FormItem className="flex-1">
-                    <FormLabel>Agency Name</FormLabel>
+                    <FormLabel>Account Name</FormLabel>
 
                     <FormControl>
                       <Input
-                        placeholder="Your agency name"
+                        placeholder="Your account name"
                         {...field}
                         disabled={isLoading}
                       />
@@ -178,7 +169,7 @@ const SubAccountDetails = ({
                 name="companyEmail"
                 render={({ field }) => (
                   <FormItem className="flex-1">
-                    <FormLabel>Agency Email</FormLabel>
+                    <FormLabel>Account Email</FormLabel>
 
                     <FormControl>
                       <Input readOnly placeholder="Email" {...field} />
@@ -194,7 +185,7 @@ const SubAccountDetails = ({
                 name="companyPhone"
                 render={({ field }) => (
                   <FormItem className="flex-1">
-                    <FormLabel>Agency Phone Number</FormLabel>
+                    <FormLabel>Account Phone Number</FormLabel>
 
                     <FormControl>
                       <Input

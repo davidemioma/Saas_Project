@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Dialog,
   DialogContent,
@@ -36,14 +37,14 @@ const CustomModal = ({
 
   return (
     <Dialog open={open || defaultOpen} onOpenChange={onOpenChange}>
-      <DialogContent className="overflow-y-scroll">
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
 
           <DialogDescription>{subheading}</DialogDescription>
         </DialogHeader>
 
-        {children}
+        <ScrollArea className="w-full">{children}</ScrollArea>
       </DialogContent>
     </Dialog>
   );

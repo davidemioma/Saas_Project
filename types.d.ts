@@ -31,3 +31,16 @@ export type NotificationProps = Notification & {
 export type PermissionProps = Permission & {
   subAccount: SubAccount;
 };
+
+export type PermissionProps = Permission & {
+  subAccount: SubAccount | null;
+};
+
+export type TeamAgencyProps = Agency & {
+  subAccounts: SubAccount[];
+};
+
+export type TeamMemberProps = User & {
+  agency: TeamAgencyProps | null;
+  permissions: PermissionProps[];
+};
