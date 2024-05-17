@@ -6,6 +6,10 @@ import {
   SubAccountSidebarOption,
   Permission,
   Notification,
+  Lane,
+  Ticket,
+  Tag,
+  Contact,
 } from "@prisma/client";
 
 export type SubAccountProps = SubAccount & {
@@ -43,4 +47,14 @@ export type TeamAgencyProps = Agency & {
 export type TeamMemberProps = User & {
   agency: TeamAgencyProps | null;
   permissions: PermissionProps[];
+};
+
+export type TicketProps = Ticket & {
+  tags: Tag[];
+  assignedUser: User | null;
+  Customer: Contact | null;
+};
+
+export type LaneProps = Lane & {
+  tickets: TicketProps[];
 };

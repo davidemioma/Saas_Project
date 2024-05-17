@@ -8,6 +8,7 @@ import { MediaValidator } from "@/lib/validators/media";
 import { Agency, SubAccount, User } from "@prisma/client";
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import { InvitationValidator } from "@/lib/validators/invitation";
+import { PipelineValidator } from "@/lib/validators/pipeline";
 
 export const getAuthUserRoleByEmail = async (email?: string) => {
   if (!email) return undefined;
@@ -766,6 +767,81 @@ export const deleteMedia = async (mediaId: string) => {
     });
   } catch (err) {
     console.log("DELETE_MEDIA", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const createOrUpdatePipeline = async ({
+  subAccountId,
+  pipelineId,
+  values,
+}: {
+  subAccountId: string;
+  pipelineId?: string;
+  values: PipelineValidator;
+}) => {
+  try {
+    let pipeline;
+
+    if (pipelineId) {
+      pipeline = await prismadb.pipeline.update({
+        where: {
+          id: pipelineId,
+        },
+        data: {
+          ...values,
+        },
+      });
+    } else {
+      pipeline = await prismadb.pipeline.create({
+        data: {
+          subAccountId,
+          ...values,
+        },
+      });
+    }
+
+    await saveActivityLogNotification({
+      agencyId: undefined,
+      description: `${pipelineId ? "Updates" : "Creates"} a pipeline | ${
+        pipeline?.name
+      }`,
+      subAccountId: subAccountId,
+    });
+  } catch (err) {
+    console.log("CREATE_OR_UPDATE_PIPELINE", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const deletePipeline = async ({
+  subAccountId,
+  pipelineId,
+}: {
+  subAccountId: string;
+  pipelineId: string;
+}) => {
+  try {
+    if (!subAccountId || !pipelineId) {
+      throw new Error(`SubAccount Id and pipeline Id required`);
+    }
+
+    const deletedPipeline = await prismadb.pipeline.delete({
+      where: {
+        id: pipelineId,
+        subAccountId,
+      },
+    });
+
+    await saveActivityLogNotification({
+      agencyId: undefined,
+      description: `Deleted a pipeline | ${deletedPipeline?.name}`,
+      subAccountId: subAccountId,
+    });
+  } catch (err) {
+    console.log("DELETE_PIPELINE", err);
 
     throw new Error(`Something went wrong ${err}`);
   }
