@@ -47,6 +47,7 @@ import {
 type Props = {
   id: string | null;
   type: "agency" | "subaccount";
+  authUserRole: Role | undefined;
   userData?: Partial<AuthUser | null>;
   subAccounts?: SubAccount[];
   subAccountsPermissions?: PermissionProps[];
@@ -56,6 +57,7 @@ type Props = {
 const UserDetails = ({
   id,
   type,
+  authUserRole,
   userData,
   subAccounts,
   subAccountsPermissions,
@@ -265,9 +267,7 @@ const UserDetails = ({
                     </FormControl>
 
                     <SelectContent>
-                      <SelectItem value="AGENCY_ADMING">
-                        Agency Admin
-                      </SelectItem>
+                      <SelectItem value="AGENCY_ADMIN">Agency Admin</SelectItem>
 
                       {userData?.role === "AGENCY_OWNER" && (
                         <SelectItem value="AGENCY_OWNER">
@@ -296,7 +296,7 @@ const UserDetails = ({
               {isLoading ? <Loader /> : "Save User Details"}
             </Button>
 
-            {userData?.role === "AGENCY_OWNER" && (
+            {authUserRole && authUserRole === "AGENCY_OWNER" && (
               <div>
                 <Separator className="my-4" />
 

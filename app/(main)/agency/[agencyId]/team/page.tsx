@@ -45,5 +45,5 @@ export default async function AgencyTeamPage({
     },
   });
 
-  return <TeamContent data={teamMembers} />;
+  return <TeamContent agencyId={agencyId} data={teamMembers} />;
 }

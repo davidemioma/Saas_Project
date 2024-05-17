@@ -41,7 +41,7 @@ export default async function AgencyUserLayout({
   const notifications = await getNotificationsAndUser({ agencyId });
 
   return (
-    <div className="h-screen overflow-hidden">
+    <div className="h-screen overflow-y-hidden">
       <Sidebar id={params.agencyId} user={userDetails} type="agency" />
 
       <div className="md:pl-[300px]">

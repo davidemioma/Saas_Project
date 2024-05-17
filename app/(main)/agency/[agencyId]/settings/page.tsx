@@ -43,6 +43,7 @@ export default async function AgencySettings({
         type="agency"
         id={agencyId}
         subAccounts={subAccounts}
+        authUserRole={userDetails.role}
         userData={userDetails}
         subAccountsPermissions={subAccountsPermissions}
       />

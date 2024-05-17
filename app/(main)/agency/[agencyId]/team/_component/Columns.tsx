@@ -13,7 +13,7 @@ export const columns: ColumnDef<TeamMemberProps>[] = [
     header: "Name",
     cell: ({ row }) => (
       <div className="flex items-center gap-4">
-        <div className="relative h-11 w-11">
+        <div className="relative h-11 w-11 flex-shrink-0">
           <Image
             className="rounded-full object-cover flex flex-shrink-0"
             src={row.original.avatarUrl}

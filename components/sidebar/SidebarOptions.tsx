@@ -118,7 +118,7 @@ const SidebarOptions = ({
           </AspectRatio>
 
           <Popover>
-            <PopoverTrigger className="outline-none ring-0">
+            <PopoverTrigger className="w-full outline-none ring-0">
               <Button
                 className="w-full flex items-center justify-between gap-5 py-8 my-4"
                 variant="ghost"
@@ -126,7 +126,7 @@ const SidebarOptions = ({
                 <div className="flex items-center gap-2 text-left">
                   <Compass />
 
-                  <div className="flex flex-col">
+                  <div className="flex flex-col w-40 truncate">
                     {details.name}
 
                     <span className="w-40 text-muted-foreground truncate">

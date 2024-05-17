@@ -9,12 +9,11 @@ import CustomModal from "@/components/modals/CustomModal";
 import SubAccountDetails from "@/components/forms/SubAccountDetails";
 
 type Props = {
-  agencyId: string;
   authUser: AuthUser | null;
   className?: string;
 };
 
-const CreateSubAccBtn = ({ agencyId, authUser, className }: Props) => {
+const CreateSubAccBtn = ({ authUser, className }: Props) => {
   const [open, setOpen] = useState(false);
 
   const agencyDetails = authUser?.agency;

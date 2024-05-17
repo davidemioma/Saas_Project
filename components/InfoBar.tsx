@@ -47,9 +47,9 @@ const InfoBar = ({ className, notifications }: Props) => {
               <SheetDescription>View all notifications</SheetDescription>
             </SheetHeader>
 
-            <ScrollArea className="pt-5">
-              {notifications.length > 0 ? (
-                <div className="space-y-3">
+            {notifications.length > 0 ? (
+              <ScrollArea className="pt-5">
+                <div className="space-y-3 h-[80vh]">
                   {notifications.map((notification) => (
                     <div
                       key={notification.id}
@@ -90,12 +90,12 @@ const InfoBar = ({ className, notifications }: Props) => {
                     </div>
                   ))}
                 </div>
-              ) : (
-                <div className="flex items-center justify-center mt-5 text-muted-foreground">
-                  You have no notifications
-                </div>
-              )}
-            </ScrollArea>
+              </ScrollArea>
+            ) : (
+              <div className="flex items-center justify-center mt-5 text-muted-foreground">
+                You have no notifications
+              </div>
+            )}
           </SheetContent>
         </Sheet>
 

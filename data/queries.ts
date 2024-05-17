@@ -4,8 +4,25 @@ import { v4 } from "uuid";
 import { toast } from "sonner";
 import prismadb from "@/lib/prisma";
 import { UserValidator } from "@/lib/validators/user";
+import { MediaValidator } from "@/lib/validators/media";
 import { Agency, SubAccount, User } from "@prisma/client";
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
+import { InvitationValidator } from "@/lib/validators/invitation";
+
+export const getAuthUserRoleByEmail = async (email?: string) => {
+  if (!email) return undefined;
+
+  const authUserRole = await prismadb.user.findUnique({
+    where: {
+      email,
+    },
+    select: {
+      role: true,
+    },
+  });
+
+  return authUserRole?.role;
+};
 
 export const getAuthUserDetails = async () => {
   try {
@@ -148,6 +165,8 @@ export const createTeamUser = async ({ user }: { user: User }) => {
 
 export const verifyAndAcceptInvitation = async () => {
   try {
+    let agencyId = null;
+
     const user = await currentUser();
 
     if (!user) return null;
@@ -173,27 +192,27 @@ export const verifyAndAcceptInvitation = async () => {
         },
       });
 
-      if (newUser) {
-        await saveActivityLogNotification({
-          agencyId: invitation.agencyId,
-          subAccountId: undefined,
-          description: "Joined",
-        });
-
-        await clerkClient.users.updateUserMetadata(user.id, {
-          privateMetadata: {
-            role: newUser.role || "SUBACCOUNT_USER",
-          },
-        });
-
-        await prismadb.invitation.delete({
-          where: { email: newUser.email },
-        });
-
-        return newUser.agencyId;
-      } else {
+      if (!newUser) {
         return null;
       }
+
+      await saveActivityLogNotification({
+        agencyId: invitation.agencyId,
+        subAccountId: undefined,
+        description: "Joined",
+      });
+
+      await clerkClient.users.updateUserMetadata(user.id, {
+        privateMetadata: {
+          role: newUser.role || "SUBACCOUNT_USER",
+        },
+      });
+
+      await prismadb.invitation.delete({
+        where: { email: newUser.email },
+      });
+
+      agencyId = newUser.agencyId;
     } else {
       const userDetails = await prismadb.user.findUnique({
         where: {
@@ -204,8 +223,10 @@ export const verifyAndAcceptInvitation = async () => {
         },
       });
 
-      return userDetails?.agencyId || null;
+      agencyId = userDetails?.agencyId;
     }
+
+    return agencyId;
   } catch (err) {
     return null;
   }
@@ -660,6 +681,91 @@ export const removeUser = async (userId: string) => {
     await prismadb.user.delete({ where: { id: userId } });
   } catch (err) {
     console.log("DELETE_USER", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const sendInvite = async ({
+  agencyId,
+  values,
+}: {
+  agencyId: string;
+  values: InvitationValidator;
+}) => {
+  try {
+    await prismadb.invitation.create({
+      data: {
+        agencyId,
+        email: values.email,
+        role: values.role,
+      },
+    });
+
+    await clerkClient.invitations.createInvitation({
+      emailAddress: values.email,
+      redirectUrl: process.env.NEXT_PUBLIC_URL,
+      publicMetadata: {
+        throughInvitation: true,
+        role: values.role,
+      },
+    });
+
+    await saveActivityLogNotification({
+      agencyId,
+      description: `Invited ${values.email}`,
+      subAccountId: undefined,
+    });
+  } catch (err) {
+    console.log("SEND_INVITE_BY_EMAIL", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const createMedia = async ({
+  subAccountId,
+  values,
+}: {
+  subAccountId: string;
+  values: MediaValidator;
+}) => {
+  try {
+    await prismadb.media.create({
+      data: {
+        subAccountId,
+        name: values.name,
+        link: values.link,
+      },
+    });
+
+    await saveActivityLogNotification({
+      agencyId: undefined,
+      description: `Uploaded a media file | ${values.name}`,
+      subAccountId,
+    });
+  } catch (err) {
+    console.log("CREATE_MEDIA", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const deleteMedia = async (mediaId: string) => {
+  try {
+    const deletedMedia = await prismadb.media.delete({
+      where: {
+        id: mediaId,
+      },
+    });
+
+    await saveActivityLogNotification({
+      agencyId: undefined,
+      description: `Deleted a media file | ${deletedMedia?.name}`,
+      subAccountId: deletedMedia.subAccountId,
+    });
+  } catch (err) {
+    console.log("DELETE_MEDIA", err);
 
     throw new Error(`Something went wrong ${err}`);
   }

@@ -33,7 +33,6 @@ export default async function AgencySubAccountsPage({
     <AlertDialog>
       <div className="flex flex-col">
         <CreateSubAccBtn
-          agencyId={agencyId}
           authUser={userDetails}
           className="w-[200px] self-end m-6"
         />

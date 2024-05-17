@@ -5,37 +5,40 @@ import { redirect } from "next/navigation";
 import { CheckCircleIcon } from "lucide-react";
 import {
   Card,
-  CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
+  CardDescription,
+  CardContent,
 } from "@/components/ui/card";
 
-export default async function AgencyLaunchPadPage({
-  params: { agencyId },
-  searchParams: { code },
+export default async function LaunchPadPage({
+  params: { subaccountId },
+  searchParams: { state, code },
 }: {
-  params: { agencyId: string };
-  searchParams: { code: string };
+  params: { subaccountId: string };
+  searchParams: {
+    state: string;
+    code: string;
+  };
 }) {
-  const agencyDetails = await prismadb.agency.findUnique({
-    where: { id: agencyId },
+  const subAccountDetails = await prismadb.subAccount.findUnique({
+    where: { id: subaccountId },
   });
 
-  if (!agencyDetails) {
+  if (!subAccountDetails) {
     return redirect("/");
   }
 
   const allDetailsExist =
-    agencyDetails.address &&
-    agencyDetails.agencyLogo &&
-    agencyDetails.city &&
-    agencyDetails.companyEmail &&
-    agencyDetails.companyPhone &&
-    agencyDetails.country &&
-    agencyDetails.name &&
-    agencyDetails.state &&
-    agencyDetails.zipCode;
+    subAccountDetails.address &&
+    subAccountDetails.subAccountLogo &&
+    subAccountDetails.city &&
+    subAccountDetails.companyEmail &&
+    subAccountDetails.companyPhone &&
+    subAccountDetails.country &&
+    subAccountDetails.name &&
+    subAccountDetails.state &&
+    subAccountDetails.zipCode;
 
   let connectedStripeAccount = false;
 
@@ -88,7 +91,7 @@ export default async function AgencyLaunchPadPage({
               </p>
             </div>
 
-            {agencyDetails.connectAccountId || connectedStripeAccount ? (
+            {subAccountDetails.connectAccountId || connectedStripeAccount ? (
               <CheckCircleIcon
                 className=" text-primary p-2 flex-shrink-0"
                 size={50}
@@ -107,7 +110,7 @@ export default async function AgencyLaunchPadPage({
             <div className="flex flex-col md:flex-row md:items-center gap-4">
               <Image
                 className="rounded-md object-contain"
-                src={agencyDetails.agencyLogo}
+                src={subAccountDetails.subAccountLogo}
                 height={80}
                 width={80}
                 alt="app logo"
@@ -124,7 +127,7 @@ export default async function AgencyLaunchPadPage({
             ) : (
               <Link
                 className="bg-primary py-2 px-4 rounded-md text-white"
-                href={`/agency/${agencyId}/settings`}
+                href={`/subaccount/${subAccountDetails.id}/settings`}
               >
                 Start
               </Link>

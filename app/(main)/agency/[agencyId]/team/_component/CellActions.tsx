@@ -1,13 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
+import prismadb from "@/lib/prisma";
+import { Role } from "@prisma/client";
+import { useUser } from "@clerk/nextjs";
 import { TeamMemberProps } from "@/types";
 import { useRouter } from "next/navigation";
-import { removeUser } from "@/data/queries";
+import { getAuthUserRoleByEmail, removeUser } from "@/data/queries";
 import { Button } from "@/components/ui/button";
 import AlertModal from "@/components/modals/AlertModal";
 import UserDetails from "@/components/forms/UserDetails";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import CustomModal from "@/components/modals/CustomModal";
 import { Copy, MoreVertical, Edit, Trash } from "lucide-react";
 import {
@@ -26,11 +30,27 @@ type Props = {
 const CellActions = ({ data }: Props) => {
   const router = useRouter();
 
-  const [update, setUpdate] = useState(false);
+  const { user } = useUser();
 
   const [remove, setRemove] = useState(false);
 
+  const [update, setUpdate] = useState(false);
+
   const [loading, setLoading] = useState(false);
+
+  const [authUserRole, setAuthUserRole] = useState<Role | undefined>(undefined);
+
+  useEffect(() => {
+    const getAuthUserRole = async () => {
+      const authUserRole = await getAuthUserRoleByEmail(
+        user?.emailAddresses[0].emailAddress
+      );
+
+      setAuthUserRole(authUserRole);
+    };
+
+    getAuthUserRole();
+  }, [user]);
 
   const removeUserHandler = async () => {
     setLoading(true);
@@ -58,6 +78,34 @@ const CellActions = ({ data }: Props) => {
 
   return (
     <>
+      {update && (
+        <CustomModal
+          open={update}
+          onOpenChange={() => setUpdate(false)}
+          title="Edit User Details"
+          subheading="You can change permissions only when the user has an owned subaccount"
+        >
+          <div className="h-[70vh]">
+            <ScrollArea>
+              <UserDetails
+                type="agency"
+                id={data.agency?.id || null}
+                authUserRole={authUserRole}
+                userData={{
+                  name: data.name,
+                  email: data.email,
+                  avatarUrl: data.avatarUrl,
+                  role: data.role,
+                }}
+                subAccounts={data.agency?.subAccounts}
+                subAccountsPermissions={data.permissions}
+                onClose={() => setUpdate(false)}
+              />
+            </ScrollArea>
+          </div>
+        </CustomModal>
+      )}
+
       {remove && (
         <AlertModal
           isOpen={remove}
@@ -66,29 +114,6 @@ const CellActions = ({ data }: Props) => {
           loading={loading}
           description="This action cannot be undone. This will permanently delete the user and related data."
         />
-      )}
-
-      {update && (
-        <CustomModal
-          open={remove}
-          onOpenChange={() => setUpdate(false)}
-          title="Edit User Details"
-          subheading="You can change permissions only when the user has an owned subaccount"
-        >
-          <UserDetails
-            type="agency"
-            id={data.agency?.id || null}
-            userData={{
-              name: data.name,
-              email: data.email,
-              avatarUrl: data.avatarUrl,
-              role: data.role,
-            }}
-            subAccounts={data.agency?.subAccounts}
-            subAccountsPermissions={data.permissions}
-            onClose={() => setUpdate(false)}
-          />
-        </CustomModal>
       )}
 
       <DropdownMenu>
@@ -118,7 +143,7 @@ const CellActions = ({ data }: Props) => {
             Edit Details
           </DropdownMenuItem>
 
-          {data.role === "AGENCY_OWNER" && (
+          {data.role !== "AGENCY_OWNER" && (
             <DropdownMenuItem
               onClick={() => setRemove(true)}
               disabled={loading}
