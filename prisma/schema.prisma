@@ -301,7 +301,7 @@ model Tag {
   
   subAccount SubAccount @relation(fields: [subAccountId], references: [id], onDelete: Cascade)
 
-  tickets     Ticket[]
+  tickets Ticket[]
 
   @@index([subAccountId])
 }
@@ -312,7 +312,7 @@ model Ticket {
   laneId String
   customerId String?
   name String
-  value Decimal?
+  value Float?
   description String?
   order Int @default(0)
   createdAt DateTime @default(now())

@@ -60,7 +60,7 @@ export default async function SubAccountLayout({
   }
 
   return (
-    <div className="h-screen overflow-y-hidden">
+    <div className="h-screen overflow-y-hidden scrollbar-hide">
       <Sidebar id={subaccountId} user={userDetails} type="subaccount" />
 
       <div className="md:pl-[300px]">

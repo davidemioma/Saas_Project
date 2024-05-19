@@ -3,12 +3,14 @@
 import { v4 } from "uuid";
 import { toast } from "sonner";
 import prismadb from "@/lib/prisma";
+import { LaneProps } from "@/types";
 import { UserValidator } from "@/lib/validators/user";
 import { MediaValidator } from "@/lib/validators/media";
-import { Agency, SubAccount, User } from "@prisma/client";
+import { Agency, SubAccount, Ticket, User } from "@prisma/client";
+import { PipelineValidator } from "@/lib/validators/pipeline";
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import { InvitationValidator } from "@/lib/validators/invitation";
-import { PipelineValidator } from "@/lib/validators/pipeline";
+import { LaneValidator } from "@/lib/validators/lane";
 
 export const getAuthUserRoleByEmail = async (email?: string) => {
   if (!email) return undefined;
@@ -842,6 +844,189 @@ export const deletePipeline = async ({
     });
   } catch (err) {
     console.log("DELETE_PIPELINE", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const createOrUpdateLane = async ({
+  subAccountId,
+  pipelineId,
+  laneId,
+  values,
+}: {
+  subAccountId: string;
+  pipelineId: string;
+  laneId?: string;
+  values: LaneValidator;
+}) => {
+  try {
+    if (!subAccountId || !pipelineId) {
+      throw new Error(`SubAccount Id and pipeline Id required`);
+    }
+
+    let lane;
+
+    const lanesCount = await prismadb.lane.count({
+      where: {
+        pipelineId,
+      },
+    });
+
+    if (laneId) {
+      lane = await prismadb.lane.update({
+        where: {
+          id: laneId,
+        },
+        data: {
+          ...values,
+        },
+      });
+    } else {
+      lane = await prismadb.lane.create({
+        data: {
+          pipelineId,
+          order: lanesCount,
+          ...values,
+        },
+      });
+    }
+
+    await saveActivityLogNotification({
+      agencyId: undefined,
+      description: `${laneId ? "Updates" : "Creates"} a lane | ${lane?.name}`,
+      subAccountId: subAccountId,
+    });
+  } catch (err) {
+    console.log("CREATE_OR_UPDATE_LANE", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const deleteLane = async ({
+  subAccountId,
+  pipelineId,
+  laneId,
+}: {
+  subAccountId: string;
+  pipelineId: string;
+  laneId: string;
+}) => {
+  try {
+    if (!subAccountId || !pipelineId || !laneId) {
+      throw new Error(`SubAccount Id, lane Id and pipeline Id required`);
+    }
+
+    const deletedLane = await prismadb.lane.delete({
+      where: {
+        id: laneId,
+        pipelineId,
+      },
+    });
+
+    await saveActivityLogNotification({
+      agencyId: undefined,
+      description: `Deleted a lane | ${deletedLane?.name}`,
+      subAccountId: subAccountId,
+    });
+  } catch (err) {
+    console.log("DELETE_LANE", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const updateLaneOrder = async (lanes: LaneProps[]) => {
+  try {
+    await Promise.all(
+      lanes.map(async (lane) => {
+        await prismadb.lane.update({
+          where: {
+            id: lane.id,
+          },
+          data: {
+            order: lane.order,
+          },
+        });
+      })
+    );
+  } catch (err) {
+    console.log("UPDATE_LANE_ORDER", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const updateTicketOrder = async (tickets: Ticket[]) => {
+  try {
+    await Promise.all(
+      tickets.map(async (ticket) => {
+        await prismadb.ticket.update({
+          where: {
+            id: ticket.id,
+          },
+          data: {
+            order: ticket.order,
+          },
+        });
+      })
+    );
+  } catch (err) {
+    console.log("UPDATE_TICKET_ORDER", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const getSubAccountTeamMembers = async (subAccountId: string) => {
+  try {
+    const teamMembers = await prismadb.user.findMany({
+      where: {
+        agency: {
+          subAccounts: {
+            some: {
+              id: subAccountId,
+            },
+          },
+        },
+        role: "SUBACCOUNT_USER",
+        permissions: {
+          some: {
+            subAccountId,
+            access: true,
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return teamMembers;
+  } catch (err) {
+    console.log("GET_SUBACCOUNT_TEAM_MEMBERS", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const getSearchedContacts = async (searchTerms: string) => {
+  try {
+    const contacts = await prismadb.contact.findMany({
+      where: {
+        name: {
+          contains: searchTerms,
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return contacts;
+  } catch (err) {
+    console.log("GET_SEARCHED_CONTACTS", err);
 
     throw new Error(`Something went wrong ${err}`);
   }

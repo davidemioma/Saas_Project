@@ -3,5 +3,5 @@ export default function PipelinesLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  return <div className="w-full h-screen overflow-y-scroll">{children}</div>;
+  return <div className="h-screen w-full">{children}</div>;
 }

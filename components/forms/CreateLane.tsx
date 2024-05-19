@@ -5,12 +5,12 @@ import { toast } from "sonner";
 import Loader from "../Loader";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { Pipeline } from "@prisma/client";
+import { Lane } from "@prisma/client";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { createOrUpdatePipeline, deletePipeline } from "@/data/queries";
-import { PipelineValidator, PipelineSchema } from "@/lib/validators/pipeline";
+import { createOrUpdateLane, deleteLane } from "@/data/queries";
+import { LaneValidator, LaneSchema } from "@/lib/validators/lane";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import {
   Form,
@@ -33,27 +33,33 @@ import {
 
 type Props = {
   subAccountId: string;
-  defaultPipeline?: Pipeline;
+  pipelineId: string;
+  defaultLane?: Lane;
   onClose?: () => void;
 };
 
-const CreatePipeline = ({ subAccountId, defaultPipeline, onClose }: Props) => {
+const CreateLane = ({
+  subAccountId,
+  pipelineId,
+  defaultLane,
+  onClose,
+}: Props) => {
   const router = useRouter();
 
   const [open, setOpen] = useState(false);
 
   const [deleting, setDeleting] = useState(false);
 
-  const form = useForm<PipelineValidator>({
-    resolver: zodResolver(PipelineSchema),
+  const form = useForm<LaneValidator>({
+    resolver: zodResolver(LaneSchema),
     defaultValues: {
-      name: defaultPipeline?.name || "",
+      name: defaultLane?.name || "",
     },
   });
 
   const isLoading = form.formState.isSubmitting;
 
-  const onSubmit = async (values: PipelineValidator) => {
+  const onSubmit = async (values: LaneValidator) => {
     if (!subAccountId) {
       onClose && onClose();
 
@@ -61,24 +67,25 @@ const CreatePipeline = ({ subAccountId, defaultPipeline, onClose }: Props) => {
     }
 
     try {
-      await createOrUpdatePipeline({
+      await createOrUpdateLane({
         subAccountId,
+        laneId: defaultLane?.id,
+        pipelineId,
         values,
-        pipelineId: defaultPipeline?.id,
       });
 
-      toast.success(`Pipeline ${defaultPipeline ? "updated" : "created"}`);
+      toast.success(`Lane ${defaultLane ? "updated" : "created"}`);
 
       onClose && onClose();
 
       router.refresh();
     } catch (err) {
-      toast.error("Something went wrong! Could not create pipline.");
+      toast.error("Something went wrong! Could not create lane.");
     }
   };
 
   const onDelete = async () => {
-    if (!subAccountId || !defaultPipeline?.id) {
+    if (!subAccountId || !defaultLane?.id) {
       setOpen(false);
 
       return;
@@ -87,18 +94,15 @@ const CreatePipeline = ({ subAccountId, defaultPipeline, onClose }: Props) => {
     setDeleting(true);
 
     try {
-      await deletePipeline({
-        subAccountId,
-        pipelineId: defaultPipeline?.id,
-      });
+      await deleteLane({ laneId: defaultLane.id, pipelineId, subAccountId });
 
-      toast.success("Pipeline deleted");
+      toast.success("Lane deleted");
 
       setOpen(false);
 
       router.refresh();
     } catch (err) {
-      toast.error("Something went wrong! Could not delete pipline.");
+      toast.error("Something went wrong! Could not delete lane.");
     } finally {
       setDeleting(false);
     }
@@ -113,7 +117,7 @@ const CreatePipeline = ({ subAccountId, defaultPipeline, onClose }: Props) => {
 
             <AlertDialogDescription>
               This action cannot be undone. This will permanently delete your
-              pipeline from our servers.
+              lane from our servers.
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -134,7 +138,7 @@ const CreatePipeline = ({ subAccountId, defaultPipeline, onClose }: Props) => {
 
       <Card className="w-full">
         <CardHeader>
-          <CardTitle>Pipeline Details</CardTitle>
+          <CardTitle>Lane Details</CardTitle>
         </CardHeader>
 
         <CardContent>
@@ -148,7 +152,7 @@ const CreatePipeline = ({ subAccountId, defaultPipeline, onClose }: Props) => {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Pipeline Name</FormLabel>
+                    <FormLabel>Lane Name</FormLabel>
 
                     <FormControl>
                       <Input
@@ -165,10 +169,10 @@ const CreatePipeline = ({ subAccountId, defaultPipeline, onClose }: Props) => {
 
               <div className="flex gap-2 mt-4">
                 <Button type="submit" className="w-20" disabled={isLoading}>
-                  {isLoading ? <Loader /> : defaultPipeline ? "Save" : "Create"}
+                  {isLoading ? <Loader /> : defaultLane ? "Save" : "Create"}
                 </Button>
 
-                {defaultPipeline && (
+                {defaultLane && (
                   <Button
                     type="button"
                     className="w-20"
@@ -188,4 +192,4 @@ const CreatePipeline = ({ subAccountId, defaultPipeline, onClose }: Props) => {
   );
 };
 
-export default CreatePipeline;
+export default CreateLane;

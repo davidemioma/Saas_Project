@@ -1,19 +1,18 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { toast } from "sonner";
-import prismadb from "@/lib/prisma";
-import { Role } from "@prisma/client";
 import { useUser } from "@clerk/nextjs";
 import { TeamMemberProps } from "@/types";
 import { useRouter } from "next/navigation";
-import { getAuthUserRoleByEmail, removeUser } from "@/data/queries";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
 import AlertModal from "@/components/modals/AlertModal";
 import UserDetails from "@/components/forms/UserDetails";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import CustomModal from "@/components/modals/CustomModal";
 import { Copy, MoreVertical, Edit, Trash } from "lucide-react";
+import { getAuthUserRoleByEmail, removeUser } from "@/data/queries";
 import {
   DropdownMenu,
   DropdownMenuLabel,
@@ -38,19 +37,20 @@ const CellActions = ({ data }: Props) => {
 
   const [loading, setLoading] = useState(false);
 
-  const [authUserRole, setAuthUserRole] = useState<Role | undefined>(undefined);
-
-  useEffect(() => {
-    const getAuthUserRole = async () => {
+  const {
+    data: authUserRole,
+    isLoading,
+    isError,
+  } = useQuery({
+    queryKey: ["get-auth-user-role", user],
+    queryFn: async () => {
       const authUserRole = await getAuthUserRoleByEmail(
         user?.emailAddresses[0].emailAddress
       );
 
-      setAuthUserRole(authUserRole);
-    };
-
-    getAuthUserRole();
-  }, [user]);
+      return authUserRole;
+    },
+  });
 
   const removeUserHandler = async () => {
     setLoading(true);
@@ -78,7 +78,7 @@ const CellActions = ({ data }: Props) => {
 
   return (
     <>
-      {update && (
+      {update && !isLoading && !isError && (
         <CustomModal
           open={update}
           onOpenChange={() => setUpdate(false)}

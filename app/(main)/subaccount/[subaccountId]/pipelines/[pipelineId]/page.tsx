@@ -51,7 +51,7 @@ export default async function PipelinePage({
 
   return (
     <Tabs defaultValue="view" className="w-full">
-      <TabsList className="bg-transparent w-full h-16 justify-between mb-4 border-b-2">
+      <TabsList className="bg-transparent w-full h-16 flex items-center justify-between gap-2 mb-4 border-b-2">
         <PipelineInfoBar
           pipelineId={pipelineId}
           subAccountId={subaccountId}
