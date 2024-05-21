@@ -1,4 +1,5 @@
 import "./globals.css";
+import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
 import { Toaster } from "@/components/ui/sonner";
@@ -19,7 +20,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={font.className}>
+      <body className={cn(font.className)}>
         <QueryProvider>
           <ThemeProvider
             attribute="class"

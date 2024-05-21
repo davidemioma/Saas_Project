@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import Loader from "../Loader";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import FileUpload from "../FileUpload";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { Separator } from "../ui/separator";
@@ -14,11 +13,12 @@ import { Switch } from "@/components/ui/switch";
 import { Role, SubAccount } from "@prisma/client";
 import { AuthUser, PermissionProps } from "@/types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { UserSchema, UserValidator } from "@/lib/validators/user";
+import { AccountValidator, AccountSchema } from "@/lib/validators/account";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   changeUserPermissions,
   saveActivityLogNotification,
-  updateUser,
+  updateAccountRole,
 } from "@/data/queries";
 import {
   Card,
@@ -44,16 +44,16 @@ import {
 } from "../ui/form";
 
 type Props = {
-  id: string | null;
+  id: string;
   type: "agency" | "subaccount";
   authUserRole: Role | undefined;
-  userData?: Partial<AuthUser | null>;
+  userData: Partial<AuthUser | null>;
   subAccounts?: SubAccount[];
   subAccountsPermissions?: PermissionProps[];
   onClose?: () => void;
 };
 
-const UserDetails = ({
+const AccountDetails = ({
   id,
   type,
   authUserRole,
@@ -68,12 +68,11 @@ const UserDetails = ({
 
   const [changingPermission, setChangingPermission] = useState(false);
 
-  const form = useForm<UserValidator>({
-    resolver: zodResolver(UserSchema),
+  const form = useForm<AccountValidator>({
+    resolver: zodResolver(AccountSchema),
     defaultValues: {
       name: userData?.name || "",
       email: userData?.email || "",
-      avatarUrl: userData?.avatarUrl || "",
       role: userData?.role || "SUBACCOUNT_USER",
     },
   });
@@ -122,11 +121,15 @@ const UserDetails = ({
     }
   };
 
-  const onSubmit = async (values: UserValidator) => {
-    try {
-      if (!id || !userData) return;
+  const onSubmit = async (values: AccountValidator) => {
+    if (!id || !userData?.id) return;
 
-      await updateUser(values);
+    try {
+      await updateAccountRole({
+        agencyId: id,
+        userId: userData.id,
+        values,
+      });
 
       const subAccsWithPermissiom =
         userData?.agency?.subAccounts.filter((subacc) =>
@@ -169,26 +172,11 @@ const UserDetails = ({
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
-            <FormField
-              control={form.control}
-              name="avatarUrl"
-              disabled={isLoading}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Profile Picture</FormLabel>
+            <Avatar className="w-40 h-40 mx-auto">
+              <AvatarImage src={userData?.avatarUrl} />
 
-                  <FormControl>
-                    <FileUpload
-                      apiEndpoint="avatar"
-                      onChange={field.onChange}
-                      value={field.value}
-                    />
-                  </FormControl>
-
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <AvatarFallback>CN</AvatarFallback>
+            </Avatar>
 
             <div className="grid md:grid-cols-2 gap-5">
               <FormField
@@ -200,9 +188,9 @@ const UserDetails = ({
 
                     <FormControl>
                       <Input
+                        readOnly={true}
                         placeholder="Your full name"
                         {...field}
-                        disabled={isLoading}
                       />
                     </FormControl>
 
@@ -219,13 +207,7 @@ const UserDetails = ({
                     <FormLabel>Email</FormLabel>
 
                     <FormControl>
-                      <Input
-                        readOnly={
-                          userData?.role === "AGENCY_OWNER" || isLoading
-                        }
-                        placeholder="Email"
-                        {...field}
-                      />
+                      <Input readOnly={true} placeholder="Email" {...field} />
                     </FormControl>
 
                     <FormMessage />
@@ -348,4 +330,4 @@ const UserDetails = ({
   );
 };
 
-export default UserDetails;
+export default AccountDetails;

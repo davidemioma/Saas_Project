@@ -11,6 +11,8 @@ import { PipelineValidator } from "@/lib/validators/pipeline";
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import { InvitationValidator } from "@/lib/validators/invitation";
 import { LaneValidator } from "@/lib/validators/lane";
+import { TicketValidator } from "@/lib/validators/ticket";
+import { AccountValidator } from "@/lib/validators/account";
 
 export const getAuthUserRoleByEmail = async (email?: string) => {
   if (!email) return undefined;
@@ -587,6 +589,72 @@ export const updateUser = async (values: UserValidator) => {
   }
 };
 
+export const updateAccountRole = async ({
+  agencyId,
+  userId,
+  values,
+}: {
+  agencyId: string;
+  userId: string;
+  values: AccountValidator;
+}) => {
+  try {
+    const user = await currentUser();
+
+    if (!user) {
+      throw new Error(
+        "Unauthorised, You need to be logged in to perform this action"
+      );
+    }
+
+    //Check if agency exists
+    const agencyExists = await prismadb.agency.findUnique({
+      where: {
+        id: agencyId,
+      },
+    });
+
+    if (!agencyExists) {
+      throw new Error("Unauthorised, Agency not found");
+    }
+
+    //check the current user if he an agency owner
+    const userExists = await prismadb.user.findUnique({
+      where: {
+        email: user.emailAddresses[0].emailAddress,
+        agencyId,
+        role: "AGENCY_OWNER",
+      },
+      select: {
+        agencyId: true,
+      },
+    });
+
+    if (!userExists) {
+      throw new Error("Unauthorised, User not found");
+    }
+
+    await prismadb.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        ...values,
+      },
+    });
+
+    await clerkClient.users.updateUserMetadata(userId, {
+      privateMetadata: {
+        role: values.role || "SUBACCOUNT_USER",
+      },
+    });
+  } catch (err) {
+    console.log("UPDATE_ACCOUNT", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
 export const changeUserPermissions = async ({
   subAccountId,
   permissionsId,
@@ -1027,6 +1095,164 @@ export const getSearchedContacts = async (searchTerms: string) => {
     return contacts;
   } catch (err) {
     console.log("GET_SEARCHED_CONTACTS", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const getSubAccountTags = async (subAccountId: string) => {
+  try {
+    if (!subAccountId) return [];
+
+    const tags = await prismadb.tag.findMany({
+      where: {
+        subAccountId,
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return tags;
+  } catch (err) {
+    console.log("GET_SUBACCOUNT_TAGS", err);
+
+    return [];
+  }
+};
+
+export const createAndUpdateTicket = async ({
+  ticketId,
+  laneId,
+  subAccountId,
+  values,
+}: {
+  ticketId?: string;
+  laneId: string;
+  subAccountId: string;
+  values: TicketValidator;
+}) => {
+  try {
+    if (!laneId || !subAccountId) {
+      throw new Error(`lane Id and subaccount Id is required`);
+    }
+
+    let ticket;
+
+    if (ticketId) {
+      ticket = await prismadb.ticket.update({
+        where: {
+          id: ticketId,
+          laneId,
+        },
+        data: {
+          ...values,
+        },
+      });
+    } else {
+      ticket = await prismadb.ticket.create({
+        data: {
+          laneId,
+          ...values,
+        },
+      });
+    }
+
+    await saveActivityLogNotification({
+      agencyId: undefined,
+      description: `Updated a ticket | ${ticket?.name}`,
+      subAccountId,
+    });
+  } catch (err) {
+    console.log("UPSERT_TICKET", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const createOrUpdateTag = async ({
+  subAccountId,
+  name,
+  color,
+}: {
+  subAccountId: string;
+  name: string;
+  color: string;
+}) => {
+  try {
+    if (!subAccountId) {
+      throw new Error(`lane Id and subaccount Id is required`);
+    }
+
+    let tag;
+
+    const tagExists = await prismadb.tag.findFirst({
+      where: {
+        subAccountId,
+        name,
+        color,
+      },
+    });
+
+    if (tagExists) {
+      tag = await prismadb.tag.update({
+        where: {
+          id: tagExists.id,
+          subAccountId,
+        },
+        data: {
+          name,
+          color,
+        },
+      });
+    } else {
+      tag = await prismadb.tag.create({
+        data: {
+          subAccountId,
+          name,
+          color,
+        },
+      });
+    }
+
+    await saveActivityLogNotification({
+      agencyId: undefined,
+      description: `Updated a tag | ${tag?.name}`,
+      subAccountId,
+    });
+  } catch (err) {
+    console.log("UPSERT_TAG", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const deleteTagById = async ({
+  subAccountId,
+  tagId,
+}: {
+  subAccountId: string;
+  tagId: string;
+}) => {
+  try {
+    if (!subAccountId || !tagId) {
+      throw new Error(`SubAccount Id and tag Id required`);
+    }
+
+    const deletedTag = await prismadb.tag.delete({
+      where: {
+        id: tagId,
+        subAccountId,
+      },
+    });
+
+    await saveActivityLogNotification({
+      agencyId: undefined,
+      description: `Deleted a tag | ${deletedTag?.name}`,
+      subAccountId,
+    });
+  } catch (err) {
+    console.log("DELETE_TAG", err);
 
     throw new Error(`Something went wrong ${err}`);
   }

@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useState, useRef } from "react";
 import { toast } from "sonner";
 import Loader from "../Loader";
 import { cn } from "@/lib/utils";
@@ -16,7 +16,11 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { User2, ChevronsUpDownIcon, CheckIcon } from "lucide-react";
 import { TicketValidator, TicketSchema } from "@/lib/validators/ticket";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { getSearchedContacts, getSubAccountTeamMembers } from "@/data/queries";
+import {
+  createAndUpdateTicket,
+  getSearchedContacts,
+  getSubAccountTeamMembers,
+} from "@/data/queries";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Popover,
@@ -27,7 +31,6 @@ import {
   Command,
   CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
 } from "@/components/ui/command";
 import {
@@ -61,6 +64,12 @@ const TicketForm = ({
 }: Props) => {
   const router = useRouter();
 
+  const [searchValue, setSearchValue] = useState(
+    defaultTicket?.Customer?.name || ""
+  );
+
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
   const form = useForm<TicketValidator>({
     resolver: zodResolver(TicketSchema),
     defaultValues: {
@@ -85,18 +94,15 @@ const TicketForm = ({
     },
   });
 
-  const currContact = form.getValues("customerId");
-
   const {
     data: contacts,
     isLoading: contactsLoading,
     isError: contactsError,
+    refetch,
   } = useQuery({
-    queryKey: ["get-searched-contacts", defaultTicket?.Customer?.name],
+    queryKey: ["get-searched-contacts", searchValue],
     queryFn: async () => {
-      const contacts = await getSearchedContacts(
-        defaultTicket?.Customer?.name || ""
-      );
+      const contacts = await getSearchedContacts(searchValue);
 
       return contacts;
     },
@@ -104,7 +110,14 @@ const TicketForm = ({
 
   const { mutate: upsertTicket, isPending } = useMutation({
     mutationKey: ["upsert-ticket", defaultTicket?.id],
-    mutationFn: async () => {},
+    mutationFn: async (values: TicketValidator) => {
+      await createAndUpdateTicket({
+        subAccountId: subaccountId,
+        laneId,
+        ticketId: defaultTicket?.id,
+        values,
+      });
+    },
     onSuccess: () => {
       toast.success(`Ticket ${defaultTicket ? "updated" : "created"}.`);
 
@@ -123,6 +136,8 @@ const TicketForm = ({
 
   const onSubmit = async (values: TicketValidator) => {
     if (!laneId) return;
+
+    upsertTicket(values);
   };
 
   return (
@@ -197,7 +212,7 @@ const TicketForm = ({
 
             <TagCreator
               subAccountId={subaccountId}
-              defaultTags={defaultTicket?.tags || []}
+              defaultTags={defaultTicket?.tags}
             />
 
             <FormField
@@ -244,7 +259,7 @@ const TicketForm = ({
 
                         {allTeamMembers?.length === 0 && (
                           <div className="flex items-center justify-center py-4 text-sm">
-                            No category found! Create a new category.
+                            No Team member found!.
                           </div>
                         )}
 
@@ -281,38 +296,53 @@ const TicketForm = ({
               )}
             />
 
-            {contacts && !contactsLoading && !contactsError && (
-              <FormField
-                control={form.control}
-                name="customerId"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Customer</FormLabel>
+            <FormField
+              control={form.control}
+              name="customerId"
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>Customer</FormLabel>
 
-                    <Popover>
-                      <PopoverTrigger asChild className="w-full">
-                        <Button
-                          variant="outline"
-                          role="combobox"
-                          className="justify-between"
-                        >
-                          {currContact
-                            ? contacts.find(
-                                (contact) => contact.id === currContact
-                              )?.name
-                            : "Select Customer..."}
-                          <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                        </Button>
-                      </PopoverTrigger>
+                  <Popover>
+                    <PopoverTrigger asChild className="w-full">
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        className="justify-between"
+                      >
+                        {field.value
+                          ? contacts?.find(
+                              (contact) => contact.id === field.value
+                            )?.name
+                          : "Select Customer..."}
+                        <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
 
-                      <PopoverContent className="w-[250px] p-0">
-                        <Command>
-                          <CommandInput placeholder="Search language..." />
+                    <PopoverContent className="w-[250px] p-0">
+                      <Command>
+                        <Input
+                          className="h-9"
+                          placeholder="Search..."
+                          value={searchValue}
+                          onChange={(e) => {
+                            if (saveTimerRef.current) {
+                              clearTimeout(saveTimerRef.current);
+                            }
 
-                          <CommandEmpty>No Customer found.</CommandEmpty>
+                            saveTimerRef.current = setTimeout(async () => {
+                              setSearchValue(e.target.value);
+                            }, 1000);
+                          }}
+                        />
 
-                          <CommandGroup>
-                            {contacts.map((contact) => (
+                        <CommandEmpty>No Customer found.</CommandEmpty>
+
+                        <CommandGroup>
+                          {!contactsLoading &&
+                            !contactsError &&
+                            Array.isArray(contacts) &&
+                            contacts?.map((contact) => (
                               <CommandItem
                                 key={contact.id}
                                 value={contact.id}
@@ -320,28 +350,27 @@ const TicketForm = ({
                                   form.setValue("customerId", contact.id);
                                 }}
                               >
-                                {contact.name}
-
                                 <CheckIcon
                                   className={cn(
-                                    "ml-auto h-4 w-4",
-                                    currContact === contact.id
+                                    "mr-2 h-4 w-4",
+                                    field.value === contact.id
                                       ? "opacity-100"
                                       : "opacity-0"
                                   )}
                                 />
+
+                                {contact.name}
                               </CommandItem>
                             ))}
-                          </CommandGroup>
-                        </Command>
-                      </PopoverContent>
-                    </Popover>
+                        </CommandGroup>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
 
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <Button
               className="w-20 mt-4"

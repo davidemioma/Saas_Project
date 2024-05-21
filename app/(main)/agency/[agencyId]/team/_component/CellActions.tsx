@@ -8,9 +8,9 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import AlertModal from "@/components/modals/AlertModal";
-import UserDetails from "@/components/forms/UserDetails";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import CustomModal from "@/components/modals/CustomModal";
+import AccountDetails from "@/components/forms/AccountDetails";
 import { Copy, MoreVertical, Edit, Trash } from "lucide-react";
 import { getAuthUserRoleByEmail, removeUser } from "@/data/queries";
 import {
@@ -72,7 +72,7 @@ const CellActions = ({ data }: Props) => {
     }
   };
 
-  if (!data || !data.agency) {
+  if (!data || !data.agency || !data.agency.id) {
     return null;
   }
 
@@ -87,15 +87,17 @@ const CellActions = ({ data }: Props) => {
         >
           <div className="h-[70vh]">
             <ScrollArea>
-              <UserDetails
+              <AccountDetails
                 type="agency"
-                id={data.agency?.id || null}
+                id={data.agency.id}
                 authUserRole={authUserRole}
                 userData={{
+                  id: data.id,
                   name: data.name,
                   email: data.email,
                   avatarUrl: data.avatarUrl,
                   role: data.role,
+                  agencyId: data.agencyId,
                 }}
                 subAccounts={data.agency?.subAccounts}
                 subAccountsPermissions={data.permissions}
