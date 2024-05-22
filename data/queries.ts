@@ -1163,6 +1163,8 @@ export const createAndUpdateTicket = async ({
       description: `Updated a ticket | ${ticket?.name}`,
       subAccountId,
     });
+
+    return ticket;
   } catch (err) {
     console.log("UPSERT_TICKET", err);
 
@@ -1253,6 +1255,39 @@ export const deleteTagById = async ({
     });
   } catch (err) {
     console.log("DELETE_TAG", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const deleteTicketById = async ({
+  subAccountId,
+  ticketId,
+  laneId,
+}: {
+  subAccountId: string;
+  ticketId: string;
+  laneId: string;
+}) => {
+  try {
+    if (!subAccountId || !ticketId || !laneId) {
+      throw new Error(`SubAccount Id, lane Id and ticket Id required`);
+    }
+
+    const deletedTicket = await prismadb.ticket.delete({
+      where: {
+        id: ticketId,
+        laneId,
+      },
+    });
+
+    await saveActivityLogNotification({
+      agencyId: undefined,
+      description: `Deleted a ticket | ${deletedTicket?.name}`,
+      subAccountId,
+    });
+  } catch (err) {
+    console.log("DELETE_TICKET", err);
 
     throw new Error(`Something went wrong ${err}`);
   }

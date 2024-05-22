@@ -79,7 +79,7 @@ const PipelineView = ({ pipelineId, pipeline, subaccountId, lanes }: Props) => {
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="bg-white/60 dark:bg-background/60 p-4 rounded-xl use-automation-zoom-in">
           <div className="flex items-center justify-between">
-            <h1 className="text-2xl">{pipeline?.name}</h1>
+            <h1 className="text-xl sm:text-2xl">{pipeline?.name}</h1>
 
             <Button
               className="flex items-center gap-4"
@@ -111,7 +111,6 @@ const PipelineView = ({ pipelineId, pipeline, subaccountId, lanes }: Props) => {
                         lane={lane}
                         pipelineId={pipelineId}
                         subaccountId={subaccountId}
-                        lanesTickets={lanesTickets}
                       />
                     ))}
 

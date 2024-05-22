@@ -25,23 +25,12 @@ type Props = {
   index: number;
   pipelineId: string;
   subaccountId: string;
-  lanesTickets: TicketProps[];
 };
 
-const PipelineLane = ({
-  lane,
-  index,
-  pipelineId,
-  subaccountId,
-  lanesTickets,
-}: Props) => {
-  const router = useRouter();
-
+const PipelineLane = ({ lane, index, pipelineId, subaccountId }: Props) => {
   const [openEditLane, setOpenEditLane] = useState(false);
 
   const [openNewTicket, setOpenNewTicket] = useState(false);
-
-  const [allTickets, setAllTickets] = useState<TicketProps[]>(lanesTickets);
 
   const amt = new Intl.NumberFormat("en-us", {
     style: "currency",
@@ -58,11 +47,6 @@ const PipelineLane = ({
 
   //Generating random color
   const randomColor = `#${Math.random().toString(16).slice(2, 8)}`;
-
-  //Optimistic updates
-  const addNewTicket = (ticket: TicketProps) => {
-    setAllTickets([...allTickets, ticket]);
-  };
 
   return (
     <>
@@ -106,7 +90,7 @@ const PipelineLane = ({
               {...provided.draggableProps}
             >
               <DropdownMenu>
-                <div className="relative bg-slate-200/30 dark:bg-muted/40 h-[400px] w-[300px] rounded-lg overflow-visible scrollbar-hide flex-shrink-0">
+                <div className="relative bg-slate-200/30 dark:bg-muted/40 h-[360px] md:h-[450px] w-[300px] rounded-lg overflow-y-scroll overflow-visible scrollbar-hide flex-shrink-0">
                   <div
                     {...provided.dragHandleProps}
                     className=" h-14 backdrop-blur-lg dark:bg-background/40 bg-slate-200/60 flex items-center justify-between gap-3"
@@ -132,31 +116,36 @@ const PipelineLane = ({
                       </DropdownMenuTrigger>
                     </div>
                   </div>
-                </div>
 
-                <Droppable droppableId={lane.id} key={lane.id} type="ticket">
-                  {(provided) => (
-                    <div className=" max-h-[700px] overflow-scroll pt-12 ">
-                      <div
-                        {...provided.droppableProps}
-                        ref={provided.innerRef}
-                        className="mt-2"
-                      >
-                        {lane.tickets.map((ticket, index) => (
-                          <PipelineTicket
-                            key={ticket.id}
-                            index={index}
-                            ticket={ticket}
-                            subaccountId={subaccountId}
-                            allTickets={allTickets}
-                            setAllTickets={setAllTickets}
-                          />
-                        ))}
-                        {provided.placeholder}
+                  <Droppable
+                    droppableId={lane.id}
+                    key={lane.id}
+                    type="ticket"
+                    direction="horizontal"
+                  >
+                    {(provided) => (
+                      <div className="overflow-scroll py-2">
+                        <div
+                          {...provided.droppableProps}
+                          ref={provided.innerRef}
+                          className="mt-2"
+                        >
+                          {lane.tickets.map((ticket, index) => (
+                            <PipelineTicket
+                              key={ticket.id}
+                              index={index}
+                              ticket={ticket}
+                              subaccountId={subaccountId}
+                              laneId={lane.id}
+                            />
+                          ))}
+
+                          {provided.placeholder}
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </Droppable>
+                    )}
+                  </Droppable>
+                </div>
 
                 <DropdownMenuContent>
                   <DropdownMenuLabel>Options</DropdownMenuLabel>
