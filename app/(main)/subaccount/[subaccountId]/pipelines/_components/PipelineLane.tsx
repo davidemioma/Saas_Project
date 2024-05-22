@@ -1,10 +1,9 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { LaneProps } from "@/types";
 import { Badge } from "@/components/ui/badge";
 import PipelineTicket from "./PipelineTicket";
-import { LaneProps, TicketProps } from "@/types";
 import CreateLane from "@/components/forms/CreateLane";
 import TicketForm from "@/components/forms/TicketForm";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -117,18 +116,13 @@ const PipelineLane = ({ lane, index, pipelineId, subaccountId }: Props) => {
                     </div>
                   </div>
 
-                  <Droppable
-                    droppableId={lane.id}
-                    key={lane.id}
-                    type="ticket"
-                    direction="horizontal"
-                  >
+                  <Droppable droppableId={lane.id} key={lane.id} type="ticket">
                     {(provided) => (
-                      <div className="overflow-scroll py-2">
+                      <div className="w-full overflow-scroll py-2">
                         <div
                           {...provided.droppableProps}
                           ref={provided.innerRef}
-                          className="mt-2"
+                          className="w-full p-2 space-y-2"
                         >
                           {lane.tickets.map((ticket, index) => (
                             <PipelineTicket

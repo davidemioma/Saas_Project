@@ -42,10 +42,13 @@ export default async function PipelinePage({
           assignedUser: true,
           Customer: true,
         },
+        orderBy: {
+          order: "asc",
+        },
       },
     },
     orderBy: {
-      createdAt: "asc",
+      order: "asc",
     },
   });
 

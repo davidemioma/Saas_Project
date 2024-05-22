@@ -146,9 +146,10 @@ const PipelineTicket = ({ index, ticket, subaccountId, laneId }: Props) => {
         {(provided) => {
           return (
             <div
-              ref={provided.innerRef}
               {...provided.draggableProps}
               {...provided.dragHandleProps}
+              ref={provided.innerRef}
+              className="w-full"
             >
               <DropdownMenu>
                 <Card className="bg-white dark:bg-slate-900  shadow-none transition-all">

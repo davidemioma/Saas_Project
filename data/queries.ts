@@ -935,12 +935,6 @@ export const createOrUpdateLane = async ({
 
     let lane;
 
-    const lanesCount = await prismadb.lane.count({
-      where: {
-        pipelineId,
-      },
-    });
-
     if (laneId) {
       lane = await prismadb.lane.update({
         where: {
@@ -951,10 +945,24 @@ export const createOrUpdateLane = async ({
         },
       });
     } else {
+      const lastLane = await prismadb.lane.findFirst({
+        where: {
+          pipelineId,
+        },
+        select: {
+          order: true,
+        },
+        orderBy: {
+          order: "desc",
+        },
+      });
+
+      const newOrder = lastLane ? lastLane.order + 1 : 0;
+
       lane = await prismadb.lane.create({
         data: {
           pipelineId,
-          order: lanesCount,
+          order: newOrder,
           ...values,
         },
       });
@@ -1005,13 +1013,20 @@ export const deleteLane = async ({
   }
 };
 
-export const updateLaneOrder = async (lanes: LaneProps[]) => {
+export const updateLaneOrder = async ({
+  pipelineId,
+  lanes,
+}: {
+  pipelineId: string;
+  lanes: LaneProps[];
+}) => {
   try {
     await Promise.all(
       lanes.map(async (lane) => {
         await prismadb.lane.update({
           where: {
             id: lane.id,
+            pipelineId,
           },
           data: {
             order: lane.order,
@@ -1026,15 +1041,25 @@ export const updateLaneOrder = async (lanes: LaneProps[]) => {
   }
 };
 
-export const updateTicketOrder = async (tickets: Ticket[]) => {
+export const updateTicketOrder = async ({
+  pipelineId,
+  tickets,
+}: {
+  pipelineId: string;
+  tickets: Ticket[];
+}) => {
   try {
     await Promise.all(
       tickets.map(async (ticket) => {
         await prismadb.ticket.update({
           where: {
             id: ticket.id,
+            Lane: {
+              pipelineId,
+            },
           },
           data: {
+            laneId: ticket.laneId,
             order: ticket.order,
           },
         });
@@ -1150,10 +1175,25 @@ export const createAndUpdateTicket = async ({
         },
       });
     } else {
+      const lastTicket = await prismadb.ticket.findFirst({
+        where: {
+          laneId,
+        },
+        select: {
+          order: true,
+        },
+        orderBy: {
+          order: "desc",
+        },
+      });
+
+      const newOrder = lastTicket ? lastTicket.order + 1 : 0;
+
       ticket = await prismadb.ticket.create({
         data: {
           laneId,
           ...values,
+          order: newOrder,
         },
       });
     }
