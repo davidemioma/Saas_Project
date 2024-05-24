@@ -4,15 +4,16 @@ import { v4 } from "uuid";
 import { toast } from "sonner";
 import prismadb from "@/lib/prisma";
 import { LaneProps } from "@/types";
+import { LaneValidator } from "@/lib/validators/lane";
 import { UserValidator } from "@/lib/validators/user";
 import { MediaValidator } from "@/lib/validators/media";
-import { Agency, SubAccount, Ticket, User } from "@prisma/client";
+import { TicketValidator } from "@/lib/validators/ticket";
+import { AccountValidator } from "@/lib/validators/account";
+import { ContactValidator } from "@/lib/validators/contact";
 import { PipelineValidator } from "@/lib/validators/pipeline";
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import { InvitationValidator } from "@/lib/validators/invitation";
-import { LaneValidator } from "@/lib/validators/lane";
-import { TicketValidator } from "@/lib/validators/ticket";
-import { AccountValidator } from "@/lib/validators/account";
+import { Agency, SubAccount, Ticket, User } from "@prisma/client";
 
 export const getAuthUserRoleByEmail = async (email?: string) => {
   if (!email) return undefined;
@@ -1328,6 +1329,55 @@ export const deleteTicketById = async ({
     });
   } catch (err) {
     console.log("DELETE_TICKET", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const createOrUpdateContact = async ({
+  subAccountId,
+  values,
+  contactId,
+}: {
+  subAccountId: string;
+  values: ContactValidator;
+  contactId?: string;
+}) => {
+  try {
+    if (!subAccountId) {
+      throw new Error(`SubAccount Id is required`);
+    }
+
+    let contact;
+
+    if (contactId) {
+      contact = await prismadb.contact.update({
+        where: {
+          id: contactId,
+          subAccountId,
+        },
+        data: {
+          ...values,
+        },
+      });
+    } else {
+      contact = await prismadb.contact.create({
+        data: {
+          subAccountId,
+          ...values,
+        },
+      });
+    }
+
+    await saveActivityLogNotification({
+      agencyId: undefined,
+      description: `${contactId ? "Updated" : "Created"} a contact | ${
+        contact.name
+      }`,
+      subAccountId,
+    });
+  } catch (err) {
+    console.log("UPSERT_CONTACT", err);
 
     throw new Error(`Something went wrong ${err}`);
   }

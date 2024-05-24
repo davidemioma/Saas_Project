@@ -58,3 +58,7 @@ export type TicketProps = Ticket & {
 export type LaneProps = Lane & {
   tickets: TicketProps[];
 };
+
+export type ContactProps = Contact & {
+  tickets: { value: number | null }[];
+};

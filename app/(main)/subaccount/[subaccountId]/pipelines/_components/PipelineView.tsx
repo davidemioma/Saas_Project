@@ -12,8 +12,8 @@ import { LaneProps, TicketProps } from "@/types";
 import { useMutation } from "@tanstack/react-query";
 import CreateLane from "@/components/forms/CreateLane";
 import CustomModal from "@/components/modals/CustomModal";
-import { DragDropContext, DropResult, Droppable } from "@hello-pangea/dnd";
 import { updateLaneOrder, updateTicketOrder } from "@/data/queries";
+import { DragDropContext, DropResult, Droppable } from "@hello-pangea/dnd";
 
 type Props = {
   pipelineId: string;

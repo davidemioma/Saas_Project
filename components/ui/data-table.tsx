@@ -58,7 +58,7 @@ export function DataTable<TData, TValue>({
           <Search />
 
           <Input
-            placeholder="Search Name..."
+            placeholder={`Search ${filterValue}...`}
             value={
               (table.getColumn(filterValue)?.getFilterValue() as string) ?? ""
             }

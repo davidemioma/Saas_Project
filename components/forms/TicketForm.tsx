@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import { toast } from "sonner";
 import Loader from "../Loader";
 import { cn } from "@/lib/utils";
@@ -16,23 +16,17 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { User2, ChevronsUpDownIcon, CheckIcon } from "lucide-react";
 import { TicketValidator, TicketSchema } from "@/lib/validators/ticket";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   createAndUpdateTicket,
   getSearchedContacts,
   getSubAccountTeamMembers,
 } from "@/data/queries";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-} from "@/components/ui/command";
 import {
   Select,
   SelectContent,
@@ -48,6 +42,19 @@ import {
   FormControl,
   FormMessage,
 } from "../ui/form";
+import {
+  Command,
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+  CommandShortcut,
+} from "@/components/ui/command";
+
+import { ScrollArea } from "../ui/scroll-area";
 
 type Props = {
   laneId: string;
@@ -64,11 +71,21 @@ const TicketForm = ({
 }: Props) => {
   const router = useRouter();
 
-  const [searchValue, setSearchValue] = useState(
-    defaultTicket?.Customer?.name || ""
-  );
+  const [openPopover, setOpenPopover] = useState(false);
 
-  const saveTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const [input, setInput] = useState(defaultTicket?.Customer?.name || "");
+
+  const [searchValue, setSearchValue] = useState(input);
+
+  useEffect(() => {
+    const inputTimeout = setTimeout(() => {
+      setSearchValue(input);
+    }, 1000);
+
+    return () => {
+      clearTimeout(inputTimeout);
+    };
+  }, [input]);
 
   const form = useForm<TicketValidator>({
     resolver: zodResolver(TicketSchema),
@@ -303,67 +320,71 @@ const TicketForm = ({
                 <FormItem className="flex flex-col">
                   <FormLabel>Customer</FormLabel>
 
-                  <Popover>
-                    <PopoverTrigger asChild className="w-full">
-                      <Button
-                        variant="outline"
-                        role="combobox"
-                        className="justify-between"
-                      >
-                        {field.value
-                          ? contacts?.find(
-                              (contact) => contact.id === field.value
-                            )?.name
-                          : "Select Customer..."}
-                        <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-                      </Button>
+                  <Popover open={openPopover} onOpenChange={setOpenPopover}>
+                    <PopoverTrigger className="w-full">
+                      <FormControl>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          role="combobox"
+                          className="w-full justify-between"
+                        >
+                          {field.value
+                            ? contacts?.find(
+                                (contact) => contact.id === field.value
+                              )?.name
+                            : "Select Customer..."}
+
+                          <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                        </Button>
+                      </FormControl>
                     </PopoverTrigger>
 
-                    <PopoverContent className="w-[250px] p-0">
-                      <Command>
-                        <Input
-                          className="h-9"
+                    <PopoverContent className="w-[250px] p-0" align="end">
+                      <div className="w-full">
+                        <input
+                          className="h-9 w-full px-2 border-0 border-b outline-none text-sm"
                           placeholder="Search..."
-                          value={searchValue}
+                          value={input}
                           onChange={(e) => {
-                            if (saveTimerRef.current) {
-                              clearTimeout(saveTimerRef.current);
-                            }
-
-                            saveTimerRef.current = setTimeout(async () => {
-                              setSearchValue(e.target.value);
-                            }, 1000);
+                            setInput(e.target.value);
                           }}
                         />
 
-                        <CommandEmpty>No Customer found.</CommandEmpty>
+                        {!contactsLoading && !contactsError && !contacts && (
+                          <div className="py-3 px-2 flex items-center justify-center text-sm">
+                            No Customer found.
+                          </div>
+                        )}
 
-                        <CommandGroup>
-                          {!contactsLoading &&
-                            !contactsError &&
-                            Array.isArray(contacts) &&
-                            contacts?.map((contact) => (
-                              <CommandItem
-                                key={contact.id}
-                                value={contact.id}
-                                onSelect={() => {
-                                  form.setValue("customerId", contact.id);
-                                }}
-                              >
-                                <CheckIcon
+                        {!contactsLoading &&
+                          !contactsError &&
+                          contacts &&
+                          contacts.length > 0 && (
+                            <ScrollArea>
+                              {contacts?.map((contact) => (
+                                <div
+                                  key={contact.id}
                                   className={cn(
-                                    "mr-2 h-4 w-4",
-                                    field.value === contact.id
-                                      ? "opacity-100"
-                                      : "opacity-0"
+                                    "w-full flex items-center p-2 cursor-pointer text-sm hover:bg-muted",
+                                    field.value === contact.id && "bg-muted"
                                   )}
-                                />
+                                  onClick={() => {
+                                    form.setValue("customerId", contact.id);
 
-                                {contact.name}
-                              </CommandItem>
-                            ))}
-                        </CommandGroup>
-                      </Command>
+                                    setOpenPopover(false);
+                                  }}
+                                >
+                                  {field.value === contact.id && (
+                                    <CheckIcon className="mr-2 h-4 w-4" />
+                                  )}
+
+                                  {contact.name}
+                                </div>
+                              ))}
+                            </ScrollArea>
+                          )}
+                      </div>
                     </PopoverContent>
                   </Popover>
 
