@@ -42,7 +42,7 @@ import {
 } from "../ui/form";
 
 type Props = {
-  data?: Partial<Agency>;
+  data?: Agency;
 };
 
 const AgencyDetails = ({ data }: Props) => {
@@ -108,6 +108,7 @@ const AgencyDetails = ({ data }: Props) => {
       if (!data?.customerId && !customerId) return;
 
       await createOrUpdateAgency({
+        agencyId: data?.id,
         customerId,
         values,
       });

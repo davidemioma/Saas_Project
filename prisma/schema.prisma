@@ -24,8 +24,8 @@ enum Role {
 }
 
 enum Plan {
-  price_1OYxkqFj9oKEERu1NbKUxXxN
-  price_1OYxkqFj9oKEERu1KfJGWxgN
+  price_1PK5xrGFaQBujn7Dy3K9Gbaj
+  price_1PK5xrGFaQBujn7DJGJHGofQ
 }
 
 enum InvitationStatus {

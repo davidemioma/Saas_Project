@@ -314,7 +314,7 @@ export const createOrUpdateAgency = async ({
     if (!values.companyEmail) {
       toast.error("Company email required!");
 
-      return;
+      return null;
     }
 
     if (agencyId) {
