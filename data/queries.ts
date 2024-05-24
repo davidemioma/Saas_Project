@@ -1,19 +1,20 @@
 "use server";
 
-import { v4 } from "uuid";
 import { toast } from "sonner";
 import prismadb from "@/lib/prisma";
 import { LaneProps } from "@/types";
+import { Agency, Ticket, User } from "@prisma/client";
 import { LaneValidator } from "@/lib/validators/lane";
 import { UserValidator } from "@/lib/validators/user";
 import { MediaValidator } from "@/lib/validators/media";
+import { AgencyValidator } from "@/lib/validators/agency";
 import { TicketValidator } from "@/lib/validators/ticket";
 import { AccountValidator } from "@/lib/validators/account";
 import { ContactValidator } from "@/lib/validators/contact";
 import { PipelineValidator } from "@/lib/validators/pipeline";
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
+import { SubAccountValidator } from "@/lib/validators/subaccount";
 import { InvitationValidator } from "@/lib/validators/invitation";
-import { Agency, SubAccount, Ticket, User } from "@prisma/client";
 
 export const getAuthUserRoleByEmail = async (email?: string) => {
   if (!email) return undefined;
@@ -298,63 +299,100 @@ export const initUser = async (newUser: Partial<User>) => {
   }
 };
 
-export const createOrUpdateAgency = async (agency: Agency) => {
+export const createOrUpdateAgency = async ({
+  agencyId,
+  values,
+  customerId,
+}: {
+  agencyId?: string;
+  customerId: string;
+  values: AgencyValidator;
+}) => {
   try {
-    if (!agency.companyEmail) return null;
+    let agencyDetail;
 
-    const agencyDetail = await prismadb.agency.upsert({
-      where: {
-        id: agency.id,
-      },
-      update: {
-        ...agency,
-      },
-      create: {
-        ...agency,
-        users: {
-          connect: {
-            email: agency.companyEmail,
+    if (!values.companyEmail) {
+      toast.error("Company email required!");
+
+      return;
+    }
+
+    if (agencyId) {
+      agencyDetail = await prismadb.agency.update({
+        where: {
+          id: agencyId,
+        },
+        data: {
+          ...values,
+        },
+        select: {
+          id: true,
+        },
+      });
+    } else {
+      const newAgency = await prismadb.agency.create({
+        data: {
+          ...values,
+          customerId,
+          connectAccountId: "",
+          goal: 5,
+        },
+        select: {
+          id: true,
+          companyEmail: true,
+        },
+      });
+
+      agencyDetail = await prismadb.agency.update({
+        where: {
+          id: newAgency.id,
+        },
+        data: {
+          users: {
+            connect: {
+              email: newAgency.companyEmail,
+            },
+          },
+          sidebarOptions: {
+            create: [
+              {
+                name: "Dashboard",
+                icon: "category",
+                link: `/agency/${newAgency.id}`,
+              },
+              {
+                name: "Launchpad",
+                icon: "clipboardIcon",
+                link: `/agency/${newAgency.id}/launchpad`,
+              },
+              {
+                name: "Billing",
+                icon: "payment",
+                link: `/agency/${newAgency.id}/billing`,
+              },
+              {
+                name: "Settings",
+                icon: "settings",
+                link: `/agency/${newAgency.id}/settings`,
+              },
+              {
+                name: "Sub Accounts",
+                icon: "person",
+                link: `/agency/${newAgency.id}/all-subaccounts`,
+              },
+              {
+                name: "Team",
+                icon: "shield",
+                link: `/agency/${newAgency.id}/team`,
+              },
+            ],
           },
         },
-        sidebarOptions: {
-          create: [
-            {
-              name: "Dashboard",
-              icon: "category",
-              link: `/agency/${agency.id}`,
-            },
-            {
-              name: "Launchpad",
-              icon: "clipboardIcon",
-              link: `/agency/${agency.id}/launchpad`,
-            },
-            {
-              name: "Billing",
-              icon: "payment",
-              link: `/agency/${agency.id}/billing`,
-            },
-            {
-              name: "Settings",
-              icon: "settings",
-              link: `/agency/${agency.id}/settings`,
-            },
-            {
-              name: "Sub Accounts",
-              icon: "person",
-              link: `/agency/${agency.id}/all-subaccounts`,
-            },
-            {
-              name: "Team",
-              icon: "shield",
-              link: `/agency/${agency.id}/team`,
-            },
-          ],
+        select: {
+          id: true,
         },
-      },
-      select: {
-        id: true,
-      },
-    });
+      });
+    }
 
     return agencyDetail;
   } catch (err) {
@@ -409,19 +447,27 @@ export const getNotificationsAndUser = async ({
 };
 
 export const createOrUpdateSubAccount = async ({
-  subAccount,
   userName,
+  agencyId,
+  subAccountId,
+  values,
 }: {
-  subAccount: SubAccount;
   userName: string;
+  agencyId: string;
+  subAccountId?: string;
+  values: SubAccountValidator;
 }) => {
   try {
-    if (!subAccount.companyEmail) return null;
+    if (!values.companyEmail) {
+      toast.error("Company email required!");
+
+      return null;
+    }
 
     const agencyOwner = await prismadb.user.findFirst({
       where: {
         agency: {
-          id: subAccount.agencyId,
+          id: agencyId,
         },
         role: "AGENCY_OWNER",
       },
@@ -431,87 +477,112 @@ export const createOrUpdateSubAccount = async ({
       throw new Error("Error, Could not find agency owner!");
     }
 
-    const permissionId = v4();
+    let subAccount;
 
-    const res = await prismadb.subAccount.upsert({
-      where: {
-        id: subAccount.id,
-      },
-      update: {
-        ...subAccount,
-      },
-      create: {
-        ...subAccount,
-        permissions: {
-          create: {
-            id: permissionId,
-            access: true,
-            email: agencyOwner.email,
+    if (subAccountId) {
+      subAccount = await prismadb.subAccount.update({
+        where: {
+          id: subAccountId,
+        },
+        data: {
+          ...values,
+        },
+        select: {
+          id: true,
+          agencyId: true,
+          name: true,
+        },
+      });
+    } else {
+      const newSubAccount = await prismadb.subAccount.create({
+        data: {
+          agencyId,
+          ...values,
+          connectAccountId: "",
+          goal: 5000,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      await prismadb.permission.create({
+        data: {
+          subAccountId: newSubAccount.id,
+          access: true,
+          email: agencyOwner.email,
+        },
+      });
+
+      await prismadb.pipeline.create({
+        data: {
+          subAccountId: newSubAccount.id,
+          name: "Lead Cycle",
+        },
+      });
+
+      subAccount = await prismadb.subAccount.update({
+        where: {
+          id: newSubAccount.id,
+        },
+        data: {
+          sidebarOptions: {
+            create: [
+              {
+                name: "Launchpad",
+                icon: "clipboardIcon",
+                link: `/subaccount/${newSubAccount.id}/launchpad`,
+              },
+              {
+                name: "Settings",
+                icon: "settings",
+                link: `/subaccount/${newSubAccount.id}/settings`,
+              },
+              {
+                name: "Funnels",
+                icon: "pipelines",
+                link: `/subaccount/${newSubAccount.id}/funnels`,
+              },
+              {
+                name: "Media",
+                icon: "database",
+                link: `/subaccount/${newSubAccount.id}/media`,
+              },
+              {
+                name: "Automations",
+                icon: "chip",
+                link: `/subaccount/${newSubAccount.id}/automations`,
+              },
+              {
+                name: "Pipelines",
+                icon: "flag",
+                link: `/subaccount/${newSubAccount.id}/pipelines`,
+              },
+              {
+                name: "Contacts",
+                icon: "person",
+                link: `/subaccount/${newSubAccount.id}/contacts`,
+              },
+              {
+                name: "Dashboard",
+                icon: "category",
+                link: `/subaccount/${newSubAccount.id}`,
+              },
+            ],
           },
-          connect: {
-            id: permissionId,
-            subAccountId: subAccount.id,
-          },
         },
-        pipelines: {
-          create: { name: "Lead Cycle" },
+        select: {
+          id: true,
+          agencyId: true,
+          name: true,
         },
-        sidebarOptions: {
-          create: [
-            {
-              name: "Launchpad",
-              icon: "clipboardIcon",
-              link: `/subaccount/${subAccount.id}/launchpad`,
-            },
-            {
-              name: "Settings",
-              icon: "settings",
-              link: `/subaccount/${subAccount.id}/settings`,
-            },
-            {
-              name: "Funnels",
-              icon: "pipelines",
-              link: `/subaccount/${subAccount.id}/funnels`,
-            },
-            {
-              name: "Media",
-              icon: "database",
-              link: `/subaccount/${subAccount.id}/media`,
-            },
-            {
-              name: "Automations",
-              icon: "chip",
-              link: `/subaccount/${subAccount.id}/automations`,
-            },
-            {
-              name: "Pipelines",
-              icon: "flag",
-              link: `/subaccount/${subAccount.id}/pipelines`,
-            },
-            {
-              name: "Contacts",
-              icon: "person",
-              link: `/subaccount/${subAccount.id}/contacts`,
-            },
-            {
-              name: "Dashboard",
-              icon: "category",
-              link: `/subaccount/${subAccount.id}`,
-            },
-          ],
-        },
-      },
-      select: {
-        id: true,
-        agencyId: true,
-        name: true,
-      },
-    });
+      });
+    }
 
     await saveActivityLogNotification({
-      agencyId: res.agencyId,
-      subAccountId: res.id,
-      description: `${userName} | updated sub account | ${res.name}`,
+      agencyId: subAccount.agencyId,
+      subAccountId: subAccount.id,
+      description: `${userName} | updated sub account | ${subAccount.name}`,
     });
   } catch (err) {
     console.log("Create/Update Sub account" + err);

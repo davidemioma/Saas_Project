@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-import { v4 } from "uuid";
 import Loader from "../Loader";
 import { toast } from "sonner";
 import { Input } from "../ui/input";
@@ -12,11 +11,9 @@ import { useUser } from "@clerk/nextjs";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import { SubAccount } from "@prisma/client";
+import { useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
-import {
-  createOrUpdateSubAccount,
-  saveActivityLogNotification,
-} from "@/data/queries";
+import { createOrUpdateSubAccount } from "@/data/queries";
 import {
   SubAccountSchema,
   SubAccountValidator,
@@ -70,45 +67,42 @@ const SubAccountDetails = ({
     },
   });
 
-  const isLoading = form.formState.isSubmitting;
-
-  const onSubmit = async (values: SubAccountValidator) => {
-    try {
-      if (!agencyDetails?.id) {
-        toast.error("You need an agency to create a new Sub Account!");
-
-        return;
-      }
-
-      const res = await createOrUpdateSubAccount({
-        subAccount: {
-          id: details?.id ? details.id : v4(),
-          agencyId: agencyDetails?.id,
-          address: values.address,
-          city: values.city,
-          companyPhone: values.companyPhone,
-          country: values.country,
-          subAccountLogo: values.subAccountLogo,
-          name: values.name,
-          state: values.state,
-          zipCode: values.zipCode,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          companyEmail: values.companyEmail,
-          connectAccountId: "",
-          goal: 5000,
-        },
+  const { mutate: upsertSubAccount, isPending: isLoading } = useMutation({
+    mutationKey: ["upsert-subAccount", details?.id],
+    mutationFn: async ({
+      values,
+      agencyId,
+    }: {
+      values: SubAccountValidator;
+      agencyId: string;
+    }) => {
+      await createOrUpdateSubAccount({
+        values,
+        agencyId,
         userName,
+        subAccountId: details?.id,
       });
-
+    },
+    onSuccess: () => {
       toast.success(`Sub account ${details?.id ? "Updated" : "Created"}!`);
 
       onClose && onClose();
 
       router.refresh();
-    } catch (err) {
+    },
+    onError: (err) => {
       toast.error("Could not create your sub account! Try again later.");
+    },
+  });
+
+  const onSubmit = async (values: SubAccountValidator) => {
+    if (!agencyDetails?.id) {
+      toast.error("You need an agency to create a new Sub Account!");
+
+      return;
     }
+
+    upsertSubAccount({ values, agencyId: agencyDetails?.id });
   };
 
   return (

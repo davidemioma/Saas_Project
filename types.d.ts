@@ -1,3 +1,4 @@
+import Stripe from "stripe";
 import {
   User,
   Agency,
@@ -62,3 +63,25 @@ export type LaneProps = Lane & {
 export type ContactProps = Contact & {
   tickets: { value: number | null }[];
 };
+
+export type AddressProps = {
+  city: string;
+  state: string;
+  line1: string;
+  postal_code: string;
+  country: string;
+};
+
+export type ShippingInfoProps = {
+  name: string;
+  address: AddressProps;
+};
+
+export type StripeCustomerType = {
+  name: string;
+  email: string;
+  address: AddressProps;
+  shipping: ShippingInfoProps;
+};
+
+export type StripePriceList = Stripe.ApiList<Stripe.Price>;

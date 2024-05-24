@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import axios from "axios";
-import { v4 } from "uuid";
 import Loader from "../Loader";
 import { toast } from "sonner";
 import { Input } from "../ui/input";
@@ -15,6 +14,7 @@ import { useForm } from "react-hook-form";
 import { NumberInput } from "@tremor/react";
 import { useRouter } from "next/navigation";
 import AlertModal from "../modals/AlertModal";
+import { useMutation } from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AgencySchema, AgencyValidator } from "@/lib/validators/agency";
 import {
@@ -52,8 +52,6 @@ const AgencyDetails = ({ data }: Props) => {
 
   const [open, setOpen] = useState(false);
 
-  const [deletingAgency, setDeletingAgency] = useState(false);
-
   const form = useForm<AgencyValidator>({
     resolver: zodResolver(AgencySchema),
     defaultValues: {
@@ -71,12 +69,9 @@ const AgencyDetails = ({ data }: Props) => {
     },
   });
 
-  const isLoading = form.formState.isSubmitting;
-
-  const onSubmit = async (values: AgencyValidator) => {
-    try {
-      let newUserData;
-
+  const { mutate: upsertAgency, isPending } = useMutation({
+    mutationKey: ["upsert-agency", data?.id],
+    mutationFn: async (values: AgencyValidator) => {
       let customerId;
 
       if (!data?.id) {
@@ -102,53 +97,50 @@ const AgencyDetails = ({ data }: Props) => {
             state: values.zipCode,
           },
         };
+
+        const res = await axios.post("/api/stripe/create-customer", bodyData);
+
+        customerId = res.data.customerId;
       }
 
-      newUserData = await initUser({ role: "AGENCY_OWNER" });
+      await initUser({ role: "AGENCY_OWNER" });
 
-      // if (!data?.customerId && !customerId) return;
+      if (!data?.customerId && !customerId) return;
 
       await createOrUpdateAgency({
-        id: data?.id || v4(),
-        customerId: data?.customerId || customerId || "",
-        address: values.address,
-        agencyLogo: values.agencyLogo,
-        city: values.city,
-        companyPhone: values.companyPhone,
-        country: values.country,
-        name: values.name,
-        state: values.state,
-        whiteLabel: values.whiteLabel,
-        zipCode: values.zipCode,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        companyEmail: values.companyEmail,
-        connectAccountId: "",
-        goal: 5,
+        customerId,
+        values,
       });
-
+    },
+    onSuccess: () => {
       toast.success(`Agency ${data?.id ? "Updated" : "Created"}!`);
 
       router.refresh();
-    } catch (err) {
+    },
+    onError: (err) => {
       toast.error("Could not create your agency! Try again later.");
-    }
-  };
+    },
+  });
 
-  const onDeleteAgency = async () => {
-    if (!data?.id) return;
+  const { mutate: onDeleteAgency, isPending: deletingAgency } = useMutation({
+    mutationKey: ["delete-agency"],
+    mutationFn: async () => {
+      if (!data?.id) return;
 
-    setDeletingAgency(true);
-
-    try {
       await deleteAgency({ agencyId: data.id });
-
+    },
+    onSuccess: () => {
       toast.success("Agency deleted successfully!");
-    } catch (err) {
+
+      router.refresh();
+    },
+    onError: (err) => {
       toast.error("Could not delete your agency! Try again later.");
-    } finally {
-      setDeletingAgency(false);
-    }
+    },
+  });
+
+  const onSubmit = async (values: AgencyValidator) => {
+    upsertAgency(values);
   };
 
   return (
@@ -176,7 +168,7 @@ const AgencyDetails = ({ data }: Props) => {
               <FormField
                 control={form.control}
                 name="agencyLogo"
-                disabled={isLoading}
+                disabled={isPending}
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Agency Logo</FormLabel>
@@ -206,7 +198,7 @@ const AgencyDetails = ({ data }: Props) => {
                         <Input
                           placeholder="Your agency name"
                           {...field}
-                          disabled={isLoading}
+                          disabled={isPending}
                         />
                       </FormControl>
 
@@ -242,7 +234,7 @@ const AgencyDetails = ({ data }: Props) => {
                         <Input
                           placeholder="Phone"
                           {...field}
-                          disabled={isLoading}
+                          disabled={isPending}
                         />
                       </FormControl>
 
@@ -255,7 +247,7 @@ const AgencyDetails = ({ data }: Props) => {
               <FormField
                 control={form.control}
                 name="whiteLabel"
-                disabled={isLoading}
+                disabled={isPending}
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between gap-4 rounded-lg border p-4">
                     <div className="space-y-0.5">
@@ -291,7 +283,7 @@ const AgencyDetails = ({ data }: Props) => {
                       <Input
                         placeholder="123 st..."
                         {...field}
-                        disabled={isLoading}
+                        disabled={isPending}
                       />
                     </FormControl>
 
@@ -312,7 +304,7 @@ const AgencyDetails = ({ data }: Props) => {
                         <Input
                           placeholder="City"
                           {...field}
-                          disabled={isLoading}
+                          disabled={isPending}
                         />
                       </FormControl>
 
@@ -332,7 +324,7 @@ const AgencyDetails = ({ data }: Props) => {
                         <Input
                           placeholder="State"
                           {...field}
-                          disabled={isLoading}
+                          disabled={isPending}
                         />
                       </FormControl>
 
@@ -352,7 +344,7 @@ const AgencyDetails = ({ data }: Props) => {
                         <Input
                           placeholder="Zipcode"
                           {...field}
-                          disabled={isLoading}
+                          disabled={isPending}
                         />
                       </FormControl>
 
@@ -373,7 +365,7 @@ const AgencyDetails = ({ data }: Props) => {
                       <Input
                         placeholder="Country"
                         {...field}
-                        disabled={isLoading}
+                        disabled={isPending}
                       />
                     </FormControl>
 
@@ -418,8 +410,8 @@ const AgencyDetails = ({ data }: Props) => {
                 </div>
               )}
 
-              <Button type="submit" disabled={isLoading || deletingAgency}>
-                {isLoading ? <Loader /> : "Save Agency Information"}
+              <Button type="submit" disabled={isPending || deletingAgency}>
+                {isPending ? <Loader /> : "Save Agency Information"}
               </Button>
             </form>
           </Form>
@@ -436,7 +428,7 @@ const AgencyDetails = ({ data }: Props) => {
                 onClick={() => setOpen(true)}
                 variant="destructive"
                 type="button"
-                disabled={isLoading || deletingAgency}
+                disabled={isPending || deletingAgency}
               >
                 Delete Agency
               </Button>

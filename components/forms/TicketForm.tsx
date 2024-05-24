@@ -10,6 +10,7 @@ import { TicketProps } from "@/types";
 import TagCreator from "../TagCreator";
 import { useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
+import { ScrollArea } from "../ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation, useQuery } from "@tanstack/react-query";
@@ -42,19 +43,6 @@ import {
   FormControl,
   FormMessage,
 } from "../ui/form";
-import {
-  Command,
-  CommandDialog,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-  CommandSeparator,
-  CommandShortcut,
-} from "@/components/ui/command";
-
-import { ScrollArea } from "../ui/scroll-area";
 
 type Props = {
   laneId: string;
