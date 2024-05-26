@@ -494,6 +494,29 @@ export const createOrUpdateSubAccount = async ({
         },
       });
     } else {
+      const subaccountsCount = await prismadb.subAccount.count({
+        where: {
+          agencyId,
+        },
+      });
+
+      const subscription = await prismadb.subscription.findUnique({
+        where: {
+          agencyId,
+        },
+        select: {
+          active: true,
+        },
+      });
+
+      if (!subscription?.active && subaccountsCount >= 3) {
+        toast.error(
+          "You have reached your max number of sub account! Upgrade to a pro plan to create more sub accounts."
+        );
+
+        return null;
+      }
+
       const newSubAccount = await prismadb.subAccount.create({
         data: {
           agencyId,
@@ -837,6 +860,29 @@ export const sendInvite = async ({
   values: InvitationValidator;
 }) => {
   try {
+    const membersCount = await prismadb.user.count({
+      where: {
+        agencyId,
+      },
+    });
+
+    const subscription = await prismadb.subscription.findUnique({
+      where: {
+        agencyId,
+      },
+      select: {
+        active: true,
+      },
+    });
+
+    if (!subscription?.active && membersCount >= 2) {
+      toast.error(
+        "You have reached your max number of invite! Upgrade to a pro plan to send more invites."
+      );
+
+      return null;
+    }
+
     await prismadb.invitation.create({
       data: {
         agencyId,

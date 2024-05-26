@@ -6,7 +6,7 @@ import { auth } from "@clerk/nextjs/server";
 export async function POST(request: Request) {
   try {
     //Check if there is a current user
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return new NextResponse(
@@ -32,20 +32,31 @@ export async function POST(request: Request) {
     }
 
     //Check if subscription exists
-    const subscriptionExists = await prismadb.subscription.findFirst({
+    const agency = await prismadb.agency.findFirst({
       where: {
         customerId,
       },
+      select: {
+        subscription: {
+          select: {
+            subscritiptionId: true,
+            active: true,
+          },
+        },
+      },
     });
 
-    if (subscriptionExists?.subscritiptionId && subscriptionExists.active) {
+    if (
+      agency?.subscription?.subscritiptionId &&
+      agency?.subscription?.active
+    ) {
       //Update subscription
       const currentSubscriptionDetails = await stripe.subscriptions.retrieve(
-        subscriptionExists.subscritiptionId
+        agency?.subscription?.subscritiptionId
       );
 
       const subscription = await stripe.subscriptions.update(
-        subscriptionExists.subscritiptionId,
+        agency?.subscription?.subscritiptionId,
         {
           items: [
             {

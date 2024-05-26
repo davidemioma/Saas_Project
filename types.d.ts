@@ -85,3 +85,21 @@ export type StripeCustomerType = {
 };
 
 export type StripePriceList = Stripe.ApiList<Stripe.Price>;
+
+export type currentPlanDetailsProps = {
+  title: string;
+  description: string;
+  price: string;
+  duration: string;
+  highlight: string;
+  features: string[];
+  priceId: string;
+};
+
+export type StripeChargeProps = {
+  description: string | null;
+  id: string;
+  date: string;
+  status: string;
+  amount: string;
+};

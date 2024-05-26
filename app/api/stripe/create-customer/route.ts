@@ -6,7 +6,7 @@ import { StripeCustomerType } from "@/types";
 export async function POST(request: Request) {
   try {
     //Check if there is a current user
-    const { userId } = auth();
+    const { userId } = await auth();
 
     if (!userId) {
       return new NextResponse(
