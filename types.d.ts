@@ -11,6 +11,8 @@ import {
   Ticket,
   Tag,
   Contact,
+  Funnel,
+  FunnelPage,
 } from "@prisma/client";
 
 export type SubAccountProps = SubAccount & {
@@ -54,6 +56,10 @@ export type TicketProps = Ticket & {
   tags: Tag[];
   assignedUser: User | null;
   Customer: Contact | null;
+};
+
+export type FunnelProps = Funnel & {
+  funnelPages: FunnelPage[];
 };
 
 export type LaneProps = Lane & {

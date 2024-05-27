@@ -7,6 +7,7 @@ import { Agency, Ticket, User } from "@prisma/client";
 import { LaneValidator } from "@/lib/validators/lane";
 import { UserValidator } from "@/lib/validators/user";
 import { MediaValidator } from "@/lib/validators/media";
+import { FunnelValidator } from "@/lib/validators/funnel";
 import { AgencyValidator } from "@/lib/validators/agency";
 import { TicketValidator } from "@/lib/validators/ticket";
 import { AccountValidator } from "@/lib/validators/account";
@@ -1495,6 +1496,91 @@ export const createOrUpdateContact = async ({
     });
   } catch (err) {
     console.log("UPSERT_CONTACT", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const createOrUpdateFunnel = async ({
+  subAccountId,
+  values,
+  funnelId,
+}: {
+  subAccountId: string;
+  values: FunnelValidator;
+  funnelId?: string;
+}) => {
+  try {
+    if (!subAccountId) {
+      throw new Error(`SubAccount Id is required`);
+    }
+
+    let funnel;
+
+    if (funnelId) {
+      funnel = await prismadb.funnel.update({
+        where: {
+          id: funnelId,
+          subAccountId,
+        },
+        data: {
+          ...values,
+        },
+      });
+    } else {
+      funnel = await prismadb.funnel.create({
+        data: {
+          subAccountId,
+          ...values,
+        },
+      });
+    }
+
+    await saveActivityLogNotification({
+      agencyId: undefined,
+      description: `${funnelId ? "Updated" : "Created"} a funnel | ${
+        funnel.name
+      }`,
+      subAccountId,
+    });
+  } catch (err) {
+    console.log("UPSERT_FUNNEL", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const updateFunnelProducts = async ({
+  subAccountId,
+  funnelId,
+  products,
+}: {
+  products: string;
+  subAccountId: string;
+  funnelId: string;
+}) => {
+  try {
+    if (!subAccountId || !funnelId) {
+      throw new Error(`SubAccount Id and funnel Id is required`);
+    }
+
+    const funnel = await prismadb.funnel.update({
+      where: {
+        id: funnelId,
+        subAccountId,
+      },
+      data: {
+        liveProducts: products,
+      },
+    });
+
+    await saveActivityLogNotification({
+      agencyId: undefined,
+      description: `Updated a funnel | ${funnel.name}`,
+      subAccountId,
+    });
+  } catch (err) {
+    console.log("UPDATE_FUNNEL_PRODUCTS", err);
 
     throw new Error(`Something went wrong ${err}`);
   }

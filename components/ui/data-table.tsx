@@ -53,7 +53,7 @@ export function DataTable<TData, TValue>({
 
   return (
     <div>
-      <div className="flex items-center justify-between gap-5">
+      <div className="flex flex-col-reverse md:flex-row md:items-center md:justify-between md:gap-5">
         <div className="flex flex-1 items-center gap-2 py-4">
           <Search />
 
@@ -69,7 +69,11 @@ export function DataTable<TData, TValue>({
           />
         </div>
 
-        {onOpen && <Button onClick={onOpen}>{actionButtonText}</Button>}
+        {onOpen && (
+          <div className="flex justify-end">
+            <Button onClick={onOpen}>{actionButtonText}</Button>
+          </div>
+        )}
       </div>
 
       <div className="rounded-md border">
