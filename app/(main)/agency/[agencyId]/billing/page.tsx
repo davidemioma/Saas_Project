@@ -49,7 +49,7 @@ export default async function BillingPage({
   //Get some charges from stripe just to display it
   const charges = await stripe.charges.list({
     limit: 50,
-    customer: agency?.subscription?.customerId,
+    customer: agency?.customerId || "",
   });
 
   const allCharges = formatCharges(charges);

@@ -1,8 +1,11 @@
 import Link from "next/link";
 import Image from "next/image";
+import { toast } from "sonner";
 import prismadb from "@/lib/prisma";
+import { stripe } from "@/lib/stripe";
 import { redirect } from "next/navigation";
 import { CheckCircleIcon } from "lucide-react";
+import { getStripeOAuthLink } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -37,7 +40,34 @@ export default async function AgencyLaunchPadPage({
     agencyDetails.state &&
     agencyDetails.zipCode;
 
+  const stripeOAuthLink = getStripeOAuthLink({
+    accountType: "agency",
+    state: `launchpad___${agencyDetails.id}`,
+  });
+
   let connectedStripeAccount = false;
+
+  if (code && !agencyDetails.connectAccountId) {
+    try {
+      const response = await stripe.oauth.token({
+        grant_type: "authorization_code",
+        code,
+      });
+
+      await prismadb.agency.update({
+        where: {
+          id: agencyId,
+        },
+        data: {
+          connectAccountId: response.stripe_user_id,
+        },
+      });
+
+      connectedStripeAccount = true;
+    } catch (error) {
+      toast.error("Unable to connect to stripe!");
+    }
+  }
 
   return (
     <div className="w-full max-w-[800px] mx-auto h-full flex items-center justify-center">
@@ -96,7 +126,7 @@ export default async function AgencyLaunchPadPage({
             ) : (
               <Link
                 className="bg-primary py-2 px-4 rounded-md text-white"
-                href={""}
+                href={stripeOAuthLink}
               >
                 Start
               </Link>

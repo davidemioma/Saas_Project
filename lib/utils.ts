@@ -19,3 +19,13 @@ export const formatCharges = (charges: Stripe.ApiList<Stripe.Charge>) => {
     })),
   ];
 };
+
+export function getStripeOAuthLink({
+  accountType,
+  state,
+}: {
+  accountType: "agency" | "subaccount";
+  state: string;
+}) {
+  return `https://connect.stripe.com/oauth/authorize?response_type=code&client_id=${process.env.NEXT_PUBLIC_STRIPE_CLIENT_ID}&scope=read_write&redirect_uri=${process.env.NEXT_PUBLIC_URL}/${accountType}&state=${state}`;
+}
