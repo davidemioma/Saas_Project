@@ -3,7 +3,7 @@
 import { toast } from "sonner";
 import prismadb from "@/lib/prisma";
 import { LaneProps } from "@/types";
-import { Agency, Ticket, User } from "@prisma/client";
+import { Agency, FunnelPage, Ticket, User } from "@prisma/client";
 import { LaneValidator } from "@/lib/validators/lane";
 import { UserValidator } from "@/lib/validators/user";
 import { MediaValidator } from "@/lib/validators/media";
@@ -16,6 +16,7 @@ import { PipelineValidator } from "@/lib/validators/pipeline";
 import { currentUser, clerkClient } from "@clerk/nextjs/server";
 import { SubAccountValidator } from "@/lib/validators/subaccount";
 import { InvitationValidator } from "@/lib/validators/invitation";
+import { FunnelPageValidator } from "@/lib/validators/funnel-page";
 
 export const getAuthUserRoleByEmail = async (email?: string) => {
   if (!email) return undefined;
@@ -1581,6 +1582,154 @@ export const updateFunnelProducts = async ({
     });
   } catch (err) {
     console.log("UPDATE_FUNNEL_PRODUCTS", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const updateFunnelPagesOrder = async ({
+  subAccountId,
+  funnelId,
+  funnelPages,
+}: {
+  subAccountId: string;
+  funnelId: string;
+  funnelPages: FunnelPage[];
+}) => {
+  try {
+    if (!subAccountId || !funnelId) {
+      throw new Error(`SubAccount Id and funnel Id is required`);
+    }
+
+    await Promise.all(
+      funnelPages.map(async (funnelPage) => {
+        await prismadb.funnelPage.update({
+          where: {
+            id: funnelPage.id,
+            funnelId,
+          },
+          data: {
+            order: funnelPage.order,
+          },
+        });
+      })
+    );
+  } catch (err) {
+    console.log("UPDATE_FUNNEL_PAGES_ORDER", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const createOrUpdateFunnelPage = async ({
+  subAccountId,
+  funnelId,
+  values,
+  funnelPageId,
+}: {
+  subAccountId: string;
+  funnelId: string;
+  values: FunnelPageValidator;
+  funnelPageId?: string;
+}) => {
+  try {
+    if (!subAccountId || !funnelId) {
+      throw new Error(`SubAccount Id and funnel Id is required`);
+    }
+
+    const funnel = await prismadb.funnel.findUnique({
+      where: {
+        id: funnelId,
+        subAccountId,
+      },
+      select: {
+        id: true,
+        name: true,
+      },
+    });
+
+    if (!funnel) {
+      throw new Error(`funnel not found`);
+    }
+
+    if (funnelPageId) {
+      await prismadb.funnelPage.update({
+        where: {
+          id: funnelPageId,
+          funnelId: funnel.id,
+        },
+        data: {
+          ...values,
+        },
+      });
+    } else {
+      const lastFunnelPage = await prismadb.funnelPage.findFirst({
+        where: {
+          funnelId: funnel.id,
+        },
+        select: {
+          order: true,
+        },
+        orderBy: {
+          order: "desc",
+        },
+      });
+
+      const order = lastFunnelPage ? lastFunnelPage.order + 1 : 0;
+
+      await prismadb.funnelPage.create({
+        data: {
+          funnelId: funnel.id,
+          ...values,
+          visits: 0,
+          order,
+          content: JSON.stringify([
+            {
+              content: [],
+              id: "__body",
+              name: "Body",
+              styles: { backgroundColor: "white" },
+              type: "__body",
+            },
+          ]),
+        },
+      });
+    }
+  } catch (err) {
+    console.log("CREATE_OR_UPDATE_FUNNEL_PAGE", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const deleteFunnelPage = async ({
+  subAccountId,
+  funnelId,
+  funnelPageId,
+}: {
+  subAccountId: string;
+  funnelId: string;
+  funnelPageId: string;
+}) => {
+  try {
+    if (!subAccountId || !funnelId) {
+      throw new Error(`Sub account Id and funnel Id are required`);
+    }
+
+    const deletedFunnelpage = await prismadb.funnelPage.delete({
+      where: {
+        id: funnelPageId,
+        funnelId,
+      },
+    });
+
+    await saveActivityLogNotification({
+      agencyId: undefined,
+      description: `Updated a funnel | ${deletedFunnelpage.name}`,
+      subAccountId,
+    });
+  } catch (err) {
+    console.log("DELETE_FUNNEL_PAGE", err);
 
     throw new Error(`Something went wrong ${err}`);
   }
