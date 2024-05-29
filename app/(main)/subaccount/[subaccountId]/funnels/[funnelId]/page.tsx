@@ -29,7 +29,7 @@ export default async function FunnelPage({
     include: {
       funnelPages: {
         orderBy: {
-          createdAt: "desc",
+          order: "asc",
         },
       },
     },

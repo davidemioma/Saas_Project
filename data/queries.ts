@@ -1652,7 +1652,39 @@ export const createOrUpdateFunnelPage = async ({
       throw new Error(`funnel not found`);
     }
 
+    const funnyPagesCount = await prismadb.funnelPage.count({
+      where: {
+        funnelId: funnel.id,
+      },
+    });
+
     if (funnelPageId) {
+      const firstFunnelPage = await prismadb.funnelPage.findFirst({
+        where: {
+          funnelId: funnel.id,
+        },
+        orderBy: {
+          createdAt: "asc",
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      const currentFunnelPage = await prismadb.funnelPage.findUnique({
+        where: {
+          id: funnelPageId,
+          funnelId: funnel.id,
+        },
+        select: {
+          id: true,
+        },
+      });
+
+      if (currentFunnelPage?.id !== firstFunnelPage?.id && !values.pathName) {
+        throw new Error(`Pathname is required`);
+      }
+
       await prismadb.funnelPage.update({
         where: {
           id: funnelPageId,
@@ -1663,6 +1695,10 @@ export const createOrUpdateFunnelPage = async ({
         },
       });
     } else {
+      if (funnyPagesCount > 0 && !values.pathName) {
+        throw new Error(`Pathname is required`);
+      }
+
       const lastFunnelPage = await prismadb.funnelPage.findFirst({
         where: {
           funnelId: funnel.id,

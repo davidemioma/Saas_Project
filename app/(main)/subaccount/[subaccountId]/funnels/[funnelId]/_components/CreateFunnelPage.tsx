@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import { toast } from "sonner";
 import Loader from "@/components/Loader";
 import { useForm } from "react-hook-form";
@@ -35,6 +35,7 @@ import {
 type Props = {
   subaccountId: string;
   funnelId: string;
+  funnelLength: number;
   defaultData?: FunnelPage;
   onClose?: () => void;
 };
@@ -44,6 +45,7 @@ const CreateFunnelPage = ({
   funnelId,
   defaultData,
   onClose,
+  funnelLength,
 }: Props) => {
   const router = useRouter();
 
@@ -54,6 +56,12 @@ const CreateFunnelPage = ({
       pathName: defaultData?.pathName || "",
     },
   });
+
+  useEffect(() => {
+    if (defaultData) {
+      form.reset({ name: defaultData.name, pathName: defaultData.pathName });
+    }
+  }, [defaultData]);
 
   const { mutate: upsertFunnelPage, isPending } = useMutation({
     mutationKey: ["upsert-funnel-page", defaultData?.id],
@@ -73,11 +81,17 @@ const CreateFunnelPage = ({
       router.refresh();
     },
     onError: (err) => {
-      toast.error(
-        `Could not ${
-          defaultData?.id ? "update" : "create"
-        } funnel page! Try again later.`
-      );
+      if (err.message === "Something went wrong Error: Pathname is required") {
+        toast(
+          "Pages other than the first page in the funnel require a pathname!"
+        );
+      } else {
+        toast.error(
+          `Could not ${
+            defaultData?.id ? "update" : "create"
+          } funnel page! Try again later.`
+        );
+      }
     },
   });
 
@@ -191,7 +205,7 @@ const CreateFunnelPage = ({
               )}
             />
 
-            <div className="flex items-center justify-end gap-2">
+            <div className="flex flex-wrap items-center justify-end gap-2">
               <Button
                 className="w-20"
                 type="submit"
@@ -214,9 +228,9 @@ const CreateFunnelPage = ({
 
               {defaultData?.id && (
                 <Button
-                  className="w-20"
                   type="button"
                   variant="outline"
+                  size="icon"
                   disabled={isPending || deleting || copying}
                   onClick={() => copyFunnelPage()}
                 >

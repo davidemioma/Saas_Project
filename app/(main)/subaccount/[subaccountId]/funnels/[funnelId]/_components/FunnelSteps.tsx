@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { toast } from "sonner";
 import { FunnelProps } from "@/types";
@@ -16,12 +16,7 @@ import CustomModal from "@/components/modals/CustomModal";
 import { Check, ExternalLink, LucideEdit } from "lucide-react";
 import { DragDropContext, Droppable, DropResult } from "@hello-pangea/dnd";
 import FunnelPagePlaceholder from "@/components/icons/funnel-page-placeholder";
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 type Props = {
   subaccountId: string;
@@ -40,6 +35,10 @@ const FunnelSteps = ({ subaccountId, funnel }: Props) => {
   const [clickedFunnelPage, setClickedFunnelPage] = useState<
     FunnelPage | undefined
   >(funnel.funnelPages[0]);
+
+  useEffect(() => {
+    setFunnelPagesState(funnel.funnelPages);
+  }, [funnel]);
 
   function reorder<T>(list: T[], startIndex: number, endIndex: number) {
     const result = Array.from(list);
@@ -106,14 +105,23 @@ const FunnelSteps = ({ subaccountId, funnel }: Props) => {
             subaccountId={subaccountId}
             funnelId={funnel.id}
             onClose={() => setOpen(false)}
+            funnelLength={funnel.funnelPages.length}
           />
         </CustomModal>
       )}
 
-      <div className="flex flex-col lg:flex-row border">
-        <aside className="flex-[0.3] bg-background flex flex-col justify-between p-6">
+      <div className="flex flex-col lg:flex-row border pb-20">
+        <aside className="flex-[0.3] bg-background p-6">
           <ScrollArea className="h-full">
-            <div className="flex gap-4 items-center">
+            <Button
+              className="w-full mb-4"
+              onClick={() => setOpen(true)}
+              disabled={isPending}
+            >
+              Create New Steps
+            </Button>
+
+            <div className="flex gap-4 mb-4 items-center">
               <Check />
               Funnel Steps
             </div>
@@ -151,14 +159,6 @@ const FunnelSteps = ({ subaccountId, funnel }: Props) => {
               </div>
             )}
           </ScrollArea>
-
-          <Button
-            className="w-full mt-4"
-            onClick={() => setOpen(true)}
-            disabled={isPending}
-          >
-            Create New Steps
-          </Button>
         </aside>
 
         <aside className="bg-muted flex-[0.7] p-4">
@@ -168,46 +168,46 @@ const FunnelSteps = ({ subaccountId, funnel }: Props) => {
                 <p className="text-sm text-muted-foreground">Page name</p>
 
                 <CardTitle>{clickedFunnelPage?.name}</CardTitle>
-
-                <CardDescription className="flex flex-col gap-4">
-                  <div className="w-full sm:w-80 border-2 rounded-lg overflow-clip">
-                    <Link
-                      href={`/subaccount/${subaccountId}/funnels/${funnel.id}/editor/${clickedFunnelPage?.id}`}
-                      className="relative group"
-                    >
-                      <div className="w-full cursor-pointer group-hover:opacity-30 ">
-                        <FunnelPagePlaceholder />
-                      </div>
-
-                      <LucideEdit
-                        size={50}
-                        className="!text-muted-foreground absolute top-1/2 left-1/2 opacity-0 transofrm -translate-x-1/2 -translate-y-1/2 group-hover:opacity-100 transition-all duration-100"
-                      />
-                    </Link>
-
-                    <Link
-                      href={`${process.env.NEXT_PUBLIC_SCHEME}${funnel.subDomainName}.${process.env.NEXT_PUBLIC_DOMAIN}/${clickedFunnelPage?.pathName}`}
-                      target="_blank"
-                      className="group flex items-center justify-start p-2 gap-2 hover:text-primary transition-colors duration-200"
-                    >
-                      <ExternalLink size={15} />
-
-                      <div className="w-64 overflow-hidden overflow-ellipsis ">
-                        {process.env.NEXT_PUBLIC_SCHEME}
-                        {funnel.subDomainName}.{process.env.NEXT_PUBLIC_DOMAIN}/
-                        {clickedFunnelPage?.pathName}
-                      </div>
-                    </Link>
-                  </div>
-
-                  <CreateFunnelPage
-                    subaccountId={subaccountId}
-                    funnelId={funnel.id}
-                    defaultData={clickedFunnelPage}
-                    onClose={() => setOpen(false)}
-                  />
-                </CardDescription>
               </CardHeader>
+
+              <CardContent className="flex flex-col gap-5">
+                <div className="w-full sm:w-80 border-2 rounded-lg overflow-clip">
+                  <Link
+                    href={`/subaccount/${subaccountId}/funnels/${funnel.id}/editor/${clickedFunnelPage?.id}`}
+                    className="relative group"
+                  >
+                    <div className="w-full cursor-pointer group-hover:opacity-30 ">
+                      <FunnelPagePlaceholder />
+                    </div>
+
+                    <LucideEdit
+                      size={50}
+                      className="!text-muted-foreground absolute top-1/2 left-1/2 opacity-0 transofrm -translate-x-1/2 -translate-y-1/2 group-hover:opacity-100 transition-all duration-100"
+                    />
+                  </Link>
+
+                  <Link
+                    href={`${process.env.NEXT_PUBLIC_SCHEME}${funnel.subDomainName}.${process.env.NEXT_PUBLIC_DOMAIN}/${clickedFunnelPage?.pathName}`}
+                    target="_blank"
+                    className="group flex items-center justify-start p-2 gap-2 hover:text-primary transition-colors duration-200"
+                  >
+                    <ExternalLink size={15} />
+
+                    <div className="w-64 overflow-hidden overflow-ellipsis ">
+                      {process.env.NEXT_PUBLIC_SCHEME}
+                      {funnel.subDomainName}.{process.env.NEXT_PUBLIC_DOMAIN}/
+                      {clickedFunnelPage?.pathName}
+                    </div>
+                  </Link>
+                </div>
+
+                <CreateFunnelPage
+                  subaccountId={subaccountId}
+                  funnelId={funnel.id}
+                  defaultData={clickedFunnelPage}
+                  funnelLength={funnel.funnelPages.length}
+                />
+              </CardContent>
             </Card>
           ) : (
             <div className="h-[600px] flex items-center justify-center text-muted-foreground">
