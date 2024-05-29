@@ -109,3 +109,10 @@ export type StripeChargeProps = {
   status: string;
   amount: string;
 };
+
+export type EditorContextData = {
+  device: DeviceTypes;
+  previewMode: boolean;
+  setPreviewMode: (mode: boolean) => void;
+  setDevice: (device: DeviceTypes) => void;
+};
