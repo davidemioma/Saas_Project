@@ -1678,6 +1678,7 @@ export const createOrUpdateFunnelPage = async ({
         },
         select: {
           id: true,
+          content: true,
         },
       });
 
@@ -1761,11 +1762,49 @@ export const deleteFunnelPage = async ({
 
     await saveActivityLogNotification({
       agencyId: undefined,
-      description: `Updated a funnel | ${deletedFunnelpage.name}`,
+      description: `Deleted a funnel | ${deletedFunnelpage.name}`,
       subAccountId,
     });
   } catch (err) {
     console.log("DELETE_FUNNEL_PAGE", err);
+
+    throw new Error(`Something went wrong ${err}`);
+  }
+};
+
+export const updateFunnelPageContent = async ({
+  subAccountId,
+  funnelId,
+  funnelPageId,
+  content,
+}: {
+  subAccountId: string;
+  funnelId: string;
+  funnelPageId: string;
+  content: string;
+}) => {
+  try {
+    if (!subAccountId || !funnelId) {
+      throw new Error(`Sub account Id and funnel Id are required`);
+    }
+
+    const funnelpage = await prismadb.funnelPage.update({
+      where: {
+        id: funnelPageId,
+        funnelId,
+      },
+      data: {
+        content,
+      },
+    });
+
+    await saveActivityLogNotification({
+      agencyId: undefined,
+      description: `Updated a funnel | ${funnelpage.name}`,
+      subAccountId,
+    });
+  } catch (err) {
+    console.log("UPDATE_FUNNEL_PAGE_CONTENT", err);
 
     throw new Error(`Something went wrong ${err}`);
   }

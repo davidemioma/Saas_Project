@@ -1,5 +1,9 @@
+import Link from "next/link";
 import prismadb from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import FunnelEditorNav from "./_components/FunnelEditorNav";
+import EditorProvider from "@/providers/editor/editor-provider";
+import { ArrowLeft } from "lucide-react";
 
 export default async function FunnelPageEditor({
   params: { subaccountId, funnelId, funnelPageId },
@@ -21,8 +25,39 @@ export default async function FunnelPageEditor({
   }
 
   return (
-    <div className="fixed inset-0 z-[20] bg-background overflow-hidden">
-      EditorFunnelPage {subaccountId} {funnelId} {funnelPageId}
-    </div>
+    <>
+      <div className="lg:hidden w-full h-full flex flex-col items-center justify-center gap-5 -mt-10">
+        <h1 className="text-lg text-center font-bold">
+          Can&apos;t use website builder on mobile and tablets! Switch to a
+          desktop.
+        </h1>
+
+        <Link
+          href={`/subaccount/${subaccountId}/funnels/${funnelId}`}
+          className="flex items-center hover:underline transition-all"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to funnel page
+        </Link>
+      </div>
+
+      <div className="hidden lg:block fixed inset-0 z-[20] bg-background overflow-hidden">
+        <EditorProvider
+          subaccountId={subaccountId}
+          funnelId={funnelId}
+          pageDetails={funnelPage}
+        >
+          <FunnelEditorNav
+            subaccountId={subaccountId}
+            funnelId={funnelId}
+            funnelPage={funnelPage}
+          />
+
+          <div>
+            EditorFunnelPage {subaccountId} {funnelId} {funnelPageId}
+          </div>
+        </EditorProvider>
+      </div>
+    </>
   );
 }
