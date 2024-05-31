@@ -140,7 +140,7 @@ const FunnelEditorNav = ({ subaccountId, funnelId, funnelPage }: Props) => {
         </div>
       </aside>
 
-      <aside>
+      <aside className="flex items-center gap-2">
         <Tabs
           defaultValue="Desktop"
           className="w-fit"
@@ -166,6 +166,8 @@ const FunnelEditorNav = ({ subaccountId, funnelId, funnelPage }: Props) => {
             </TabsTrigger>
           </TabsList>
         </Tabs>
+
+        <span className="text-sm">Device: {state.editor.device}</span>
       </aside>
 
       <aside className="flex items-center gap-2">

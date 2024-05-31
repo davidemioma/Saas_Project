@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import FunnelEditorNav from "./_components/FunnelEditorNav";
 import EditorProvider from "@/providers/editor/editor-provider";
 import { ArrowLeft } from "lucide-react";
+import FunnelEditorSidebar from "./_components/FunnelEditorSidebar";
 
 export default async function FunnelPageEditor({
   params: { subaccountId, funnelId, funnelPageId },
@@ -53,9 +54,11 @@ export default async function FunnelPageEditor({
             funnelPage={funnelPage}
           />
 
-          <div>
+          <div className="px-4 mr-[384px]">
             EditorFunnelPage {subaccountId} {funnelId} {funnelPageId}
           </div>
+
+          <FunnelEditorSidebar subaccountId={subaccountId} />
         </EditorProvider>
       </div>
     </>
