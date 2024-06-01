@@ -33,6 +33,8 @@ import {
   AlignHorizontalJustifyStart,
   AlignHorizontalSpaceAround,
   AlignHorizontalSpaceBetween,
+  Rows,
+  Columns,
 } from "lucide-react";
 
 const SettingsTabs = () => {
@@ -639,12 +641,33 @@ const SettingsTabs = () => {
           <div className="flex items-center gap-2">
             <Label className="text-muted-foreground">Direction</Label>
 
-            <Input
-              placeholder="px"
-              id="flexDirection"
-              onChange={onChangeValues}
+            <Tabs
+              onValueChange={(e) =>
+                onChangeValues({
+                  target: {
+                    id: "flexDirection",
+                    value: e,
+                  },
+                })
+              }
               value={state.editor.selectedElement.styles.flexDirection}
-            />
+            >
+              <TabsList className="bg-transparent h-fit flex items-center justify-between gap-4 border rounded-md">
+                <TabsTrigger
+                  value={"row"}
+                  className="w-10 h-10 p-0 data-[state=active]:bg-muted"
+                >
+                  <Rows size={18} />
+                </TabsTrigger>
+
+                <TabsTrigger
+                  value={"column"}
+                  className="w-10 h-10 p-0 data-[state=active]:bg-muted"
+                >
+                  <Columns size={18} />
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
         </AccordionContent>
       </AccordionItem>

@@ -2,6 +2,7 @@
 
 import React from "react";
 import SettingsTabs from "./SettingsTabs";
+import MediaBucketTab from "./MediaBucketTab";
 import { useEditor } from "@/providers/editor/editor-provider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Database, Plus, SettingsIcon, SquareStackIcon } from "lucide-react";
@@ -12,6 +13,10 @@ type Props = {
 
 const FunnelEditorSidebar = ({ subaccountId }: Props) => {
   const { state } = useEditor();
+
+  if (state.editor.previewMode || state.editor.liveMode) {
+    return null;
+  }
 
   return (
     <>
@@ -66,7 +71,7 @@ const FunnelEditorSidebar = ({ subaccountId }: Props) => {
                 </TabsContent>
 
                 <TabsContent value="Media">
-                  <div>MediaBucketTab</div>
+                  <MediaBucketTab subaccountId={subaccountId} />
                 </TabsContent>
 
                 <TabsContent value="Components">

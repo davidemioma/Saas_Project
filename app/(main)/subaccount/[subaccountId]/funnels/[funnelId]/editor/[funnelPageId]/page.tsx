@@ -1,9 +1,10 @@
 import Link from "next/link";
-import prismadb from "@/lib/prisma";
+import { ArrowLeft } from "lucide-react";
 import { redirect } from "next/navigation";
+import { getFunnelPage } from "@/data/queries";
 import FunnelEditorNav from "./_components/FunnelEditorNav";
 import EditorProvider from "@/providers/editor/editor-provider";
-import { ArrowLeft } from "lucide-react";
+import FunnelEditor from "./_components/funnel-editor/FunnelEditor";
 import FunnelEditorSidebar from "./_components/FunnelEditorSidebar";
 
 export default async function FunnelPageEditor({
@@ -11,14 +12,10 @@ export default async function FunnelPageEditor({
 }: {
   params: { subaccountId: string; funnelId: string; funnelPageId: string };
 }) {
-  const funnelPage = await prismadb.funnelPage.findUnique({
-    where: {
-      id: funnelPageId,
-      funnel: {
-        id: funnelId,
-        subAccountId: subaccountId,
-      },
-    },
+  const funnelPage = await getFunnelPage({
+    subAccountId: subaccountId,
+    funnelId,
+    funnelPageId,
   });
 
   if (!funnelPage) {
@@ -54,8 +51,12 @@ export default async function FunnelPageEditor({
             funnelPage={funnelPage}
           />
 
-          <div className="px-4 mr-[384px]">
-            EditorFunnelPage {subaccountId} {funnelId} {funnelPageId}
+          <div className="h-full flex justify-center mr-[385px]">
+            <FunnelEditor
+              subaccountId={subaccountId}
+              funnelId={funnelId}
+              funnelPageId={funnelPageId}
+            />
           </div>
 
           <FunnelEditorSidebar subaccountId={subaccountId} />

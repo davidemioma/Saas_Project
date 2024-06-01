@@ -1809,3 +1809,55 @@ export const updateFunnelPageContent = async ({
     throw new Error(`Something went wrong ${err}`);
   }
 };
+
+export const getFunnelPage = async ({
+  subAccountId,
+  funnelId,
+  funnelPageId,
+}: {
+  subAccountId: string;
+  funnelId: string;
+  funnelPageId: string;
+}) => {
+  try {
+    if (!subAccountId || !funnelId || !funnelPageId) {
+      return null;
+    }
+
+    const funnelPage = await prismadb.funnelPage.findUnique({
+      where: {
+        id: funnelPageId,
+        funnel: {
+          id: funnelId,
+          subAccountId,
+        },
+      },
+    });
+
+    return funnelPage;
+  } catch (err) {
+    console.log("GET_FUNNEL_PAGE", err);
+
+    return null;
+  }
+};
+
+export const getMedia = async ({ subAccountId }: { subAccountId: string }) => {
+  try {
+    if (!subAccountId) {
+      return [];
+    }
+
+    const allMedia = await prismadb.media.findMany({
+      where: {
+        subAccountId,
+      },
+    });
+
+    return allMedia;
+  } catch (err) {
+    console.log("GET_MEDIA", err);
+
+    return [];
+  }
+};
