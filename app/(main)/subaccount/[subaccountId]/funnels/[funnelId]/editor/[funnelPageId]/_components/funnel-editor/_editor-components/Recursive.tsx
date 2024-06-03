@@ -1,6 +1,8 @@
 import React from "react";
 import Text from "./Text";
+import Video from "./Video";
 import Container from "./Container";
+import LinkComponent from "./LinkComponent";
 import { EditorElement } from "@/providers/editor/editor-reducer";
 
 type Props = {
@@ -14,17 +16,19 @@ const Recursive = ({ element }: Props) => {
     case "container":
       return <Container element={element} />;
     case "video":
-      return <div>video componemt</div>;
+      return <Video element={element} />;
     case "contactForm":
       return <div>contactForm componemt</div>;
     case "paymentForm":
       return <div>paymentForm componemt</div>;
     case "2Col":
-      return <div>2Col componemt</div>;
+      return <Container element={element} />;
+    case "3Col":
+      return <Container element={element} />;
     case "__body":
       return <Container element={element} />;
     case "link":
-      return <div>link componemt</div>;
+      return <LinkComponent element={element} />;
     default:
       return null;
   }

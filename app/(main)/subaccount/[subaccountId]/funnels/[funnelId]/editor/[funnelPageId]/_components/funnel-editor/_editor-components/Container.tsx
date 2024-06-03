@@ -2,11 +2,11 @@ import React from "react";
 import { v4 } from "uuid";
 import { cn } from "@/lib/utils";
 import Recursive from "./Recursive";
+import { Trash } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { EditorBtns, defaultStyles } from "@/lib/constants";
 import { useEditor } from "@/providers/editor/editor-provider";
 import { EditorElement } from "@/providers/editor/editor-reducer";
-import { Trash } from "lucide-react";
 
 type Props = {
   element: EditorElement;
