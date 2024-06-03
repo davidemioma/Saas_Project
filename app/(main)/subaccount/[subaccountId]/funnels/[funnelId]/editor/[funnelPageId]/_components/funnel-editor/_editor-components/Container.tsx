@@ -247,7 +247,7 @@ const Container = ({ element }: Props) => {
         (element.type === "container" ||
           element.type === "2Col" ||
           element.type === "3Col") &&
-          "max-w-full w-full",
+          "w-full max-w-full",
         element.type === "container" && "h-fit",
         element.type === "__body" && "h-full overflow-scroll",
         element.type === "2Col" && "flex flex-col md:flex-row",
@@ -259,11 +259,11 @@ const Container = ({ element }: Props) => {
         state.editor.selectedElement.id === element.id &&
           !state.editor.liveMode &&
           state.editor.selectedElement.type === "__body" &&
-          "border-yellow-400 border-4",
+          "border-4 border-yellow-400",
         state.editor.selectedElement.id === element.id &&
           !state.editor.liveMode &&
           "border-solid",
-        !state.editor.liveMode && "border-dashed border-[1px] border-slate-300"
+        !state.editor.liveMode && "border-[1px] border-dashed border-slate-300",
       )}
       draggable={element.type !== "__body"}
       onDragStart={(e) => onDragStart({ e, type: "container" })}
@@ -273,10 +273,10 @@ const Container = ({ element }: Props) => {
     >
       <Badge
         className={cn(
-          "hidden absolute -top-[23px] -left-[1px] rounded-none rounded-t-lg",
+          "absolute -left-[1px] -top-[23px] hidden rounded-none rounded-t-lg",
           state.editor.selectedElement.id === element.id &&
             !state.editor.liveMode &&
-            "block"
+            "block",
         )}
       >
         {element.name}
@@ -290,7 +290,7 @@ const Container = ({ element }: Props) => {
       {state.editor.selectedElement.id === element.id &&
         !state.editor.liveMode &&
         state.editor.selectedElement.type !== "__body" && (
-          <div className="absolute -top-[25px] -right-[1px] bg-primary px-2.5 py-1 text-xs font-bold rounded-none rounded-t-lg">
+          <div className="absolute -right-[1px] -top-[25px] rounded-none rounded-t-lg bg-primary px-2.5 py-1 text-xs font-bold">
             <Trash size={16} onClick={onDeleteElement} />
           </div>
         )}

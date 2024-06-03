@@ -96,7 +96,7 @@ const FunnelEditor = ({
         "bg-background h-full overflow-scroll scrollbar-hide transition-all rounded-md use-automation-zoom-in",
         (state.editor.previewMode || state.editor.liveMode) && "p-0 mr-0",
         state.editor.device === "Desktop" && "w-full",
-        state.editor.device === "Tablet" && "w-[85%]",
+        state.editor.device === "Tablet" && "w-[90%]",
         state.editor.device === "Mobile" && "w-[420px]"
       )}
       onClick={handleClick}
