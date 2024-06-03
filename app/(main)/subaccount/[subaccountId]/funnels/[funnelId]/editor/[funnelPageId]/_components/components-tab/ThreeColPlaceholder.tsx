@@ -10,10 +10,10 @@ const ThreeColPlaceholder = () => {
 
   return (
     <div
-      className="grid h-14 w-14 grid-cols-3 gap-1 rounded-lg bg-muted/70 p-2"
+      className="grid h-14 w-52 grid-cols-3 gap-1 rounded-lg bg-muted/70 p-2"
       draggable
       onDragStart={(e) => {
-        onDragState(e, "container");
+        onDragState(e, "3Col");
       }}
     >
       <div className="h-full w-full rounded-sm border border-dashed border-muted-foreground/50 bg-muted" />

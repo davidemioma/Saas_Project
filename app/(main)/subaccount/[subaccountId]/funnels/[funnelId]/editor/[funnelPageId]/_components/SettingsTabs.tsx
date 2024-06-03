@@ -111,6 +111,34 @@ const SettingsTabs = () => {
                 />
               </div>
             )}
+
+          {state.editor.selectedElement.type === "image" &&
+            !Array.isArray(state.editor.selectedElement.content) && (
+              <div className="flex flex-col gap-2">
+                <p className="text-muted-foreground">Image src</p>
+
+                <Input
+                  id="src"
+                  placeholder="image src"
+                  onChange={onChangeCustomValues}
+                  value={state.editor.selectedElement.content.src}
+                />
+              </div>
+            )}
+
+          {state.editor.selectedElement.type === "video" &&
+            !Array.isArray(state.editor.selectedElement.content) && (
+              <div className="flex flex-col gap-2">
+                <p className="text-muted-foreground">Video src</p>
+
+                <Input
+                  id="src"
+                  placeholder="Video src"
+                  onChange={onChangeCustomValues}
+                  value={state.editor.selectedElement.content.src}
+                />
+              </div>
+            )}
         </AccordionContent>
       </AccordionItem>
 
@@ -135,31 +163,31 @@ const SettingsTabs = () => {
                 })
               }
             >
-              <TabsList className="bg-transparent h-fit flex items-center justify-between gap-4 border">
+              <TabsList className="flex h-fit items-center justify-between gap-4 border bg-transparent">
                 <TabsTrigger
                   value="left"
-                  className="w-10 h-10 p-0 data-[state=active]:bg-muted"
+                  className="h-10 w-10 p-0 data-[state=active]:bg-muted"
                 >
                   <AlignLeft size={18} />
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="right"
-                  className="w-10 h-10 p-0 data-[state=active]:bg-muted"
+                  className="h-10 w-10 p-0 data-[state=active]:bg-muted"
                 >
                   <AlignRight size={18} />
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="center"
-                  className="w-10 h-10 p-0 data-[state=active]:bg-muted"
+                  className="h-10 w-10 p-0 data-[state=active]:bg-muted"
                 >
                   <AlignCenter size={18} />
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="justify"
-                  className="w-10 h-10 p-0 data-[state=active]:bg-muted "
+                  className="h-10 w-10 p-0 data-[state=active]:bg-muted"
                 >
                   <AlignJustify size={18} />
                 </TabsTrigger>
@@ -373,7 +401,7 @@ const SettingsTabs = () => {
                   : parseFloat(
                       (
                         state.editor.selectedElement.styles?.opacity || "0"
-                      ).replace("%", "")
+                      ).replace("%", ""),
                     ) || 0}
                 %
               </small>
@@ -386,7 +414,7 @@ const SettingsTabs = () => {
                   : parseFloat(
                       (
                         state.editor.selectedElement.styles?.opacity || "0"
-                      ).replace("%", "")
+                      ).replace("%", ""),
                     ) || 0,
               ]}
               onValueChange={(e: any) => {
@@ -413,7 +441,7 @@ const SettingsTabs = () => {
                   : parseFloat(
                       (
                         state.editor.selectedElement.styles?.borderRadius || "0"
-                      ).replace("px", "")
+                      ).replace("px", ""),
                     ) || 0}
                 px
               </small>
@@ -427,7 +455,7 @@ const SettingsTabs = () => {
                   : parseFloat(
                       (
                         state.editor.selectedElement.styles?.borderRadius || "0"
-                      ).replace("px", "")
+                      ).replace("px", ""),
                     ) || 0,
               ]}
               onValueChange={(e: any) => {
@@ -446,7 +474,7 @@ const SettingsTabs = () => {
           <div className="flex flex-col gap-2">
             <Label className="text-muted-foreground">Background Color</Label>
 
-            <div className="flex border rounded-md overflow-clip">
+            <div className="flex overflow-clip rounded-md border">
               <div
                 className="w-12"
                 style={{
@@ -457,7 +485,7 @@ const SettingsTabs = () => {
 
               <Input
                 id="backgroundColor"
-                className="border-y-0 rounded-none border-r-0 mr-2"
+                className="mr-2 rounded-none border-y-0 border-r-0"
                 placeholder="#HFI245"
                 onChange={onChangeValues}
                 value={state.editor.selectedElement.styles.backgroundColor}
@@ -468,7 +496,7 @@ const SettingsTabs = () => {
           <div className="flex flex-col gap-2">
             <Label className="text-muted-foreground">Background Image</Label>
 
-            <div className="flex border rounded-md overflow-clip">
+            <div className="flex overflow-clip rounded-md border">
               <div
                 className="w-12"
                 style={{
@@ -479,7 +507,7 @@ const SettingsTabs = () => {
 
               <Input
                 id="backgroundImage"
-                className="border-y-0 rounded-none border-r-0 mr-2"
+                className="mr-2 rounded-none border-y-0 border-r-0"
                 placeholder="url()"
                 onChange={onChangeValues}
                 value={state.editor.selectedElement.styles.backgroundImage}
@@ -501,24 +529,24 @@ const SettingsTabs = () => {
               }
               value={state.editor.selectedElement.styles.backgroundSize?.toString()}
             >
-              <TabsList className="bg-transparent h-fit flex items-center justify-between gap-4 border rounded-md">
+              <TabsList className="flex h-fit items-center justify-between gap-4 rounded-md border bg-transparent">
                 <TabsTrigger
                   value="cover"
-                  className="w-10 h-10 p-0 data-[state=active]:bg-muted"
+                  className="h-10 w-10 p-0 data-[state=active]:bg-muted"
                 >
                   <ChevronsLeftRightIcon size={18} />
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="contain"
-                  className="w-10 h-10 p-0 data-[state=active]:bg-muted"
+                  className="h-10 w-10 p-0 data-[state=active]:bg-muted"
                 >
                   <AlignVerticalJustifyCenter size={22} />
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="auto"
-                  className="w-10 h-10 p-0 data-[state=active]:bg-muted"
+                  className="h-10 w-10 p-0 data-[state=active]:bg-muted"
                 >
                   <LucideImageDown size={18} />
                 </TabsTrigger>
@@ -548,38 +576,38 @@ const SettingsTabs = () => {
               }
               value={state.editor.selectedElement.styles.justifyContent}
             >
-              <TabsList className="bg-transparent h-fit flex items-center justify-between gap-4 border rounded-md">
+              <TabsList className="flex h-fit items-center justify-between gap-4 rounded-md border bg-transparent">
                 <TabsTrigger
                   value="space-between"
-                  className="w-10 h-10 p-0 data-[state=active]:bg-muted"
+                  className="h-10 w-10 p-0 data-[state=active]:bg-muted"
                 >
                   <AlignHorizontalSpaceBetween size={18} />
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="space-evenly"
-                  className="w-10 h-10 p-0 data-[state=active]:bg-muted"
+                  className="h-10 w-10 p-0 data-[state=active]:bg-muted"
                 >
                   <AlignHorizontalSpaceAround size={18} />
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="center"
-                  className="w-10 h-10 p-0 data-[state=active]:bg-muted"
+                  className="h-10 w-10 p-0 data-[state=active]:bg-muted"
                 >
                   <AlignHorizontalJustifyCenterIcon size={18} />
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="start"
-                  className="w-10 h-10 p-0 data-[state=active]:bg-muted "
+                  className="h-10 w-10 p-0 data-[state=active]:bg-muted"
                 >
                   <AlignHorizontalJustifyStart size={18} />
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="end"
-                  className="w-10 h-10 p-0 data-[state=active]:bg-muted "
+                  className="h-10 w-10 p-0 data-[state=active]:bg-muted"
                 >
                   <AlignHorizontalJustifyEndIcon size={18} />
                 </TabsTrigger>
@@ -601,17 +629,17 @@ const SettingsTabs = () => {
               }
               value={state.editor.selectedElement.styles.alignItems}
             >
-              <TabsList className="bg-transparent h-fit flex items-center justify-between gap-4 border rounded-md">
+              <TabsList className="flex h-fit items-center justify-between gap-4 rounded-md border bg-transparent">
                 <TabsTrigger
                   value="center"
-                  className="w-10 h-10 p-0 data-[state=active]:bg-muted"
+                  className="h-10 w-10 p-0 data-[state=active]:bg-muted"
                 >
                   <AlignVerticalJustifyCenter size={18} />
                 </TabsTrigger>
 
                 <TabsTrigger
                   value="normal"
-                  className="w-10 h-10 p-0 data-[state=active]:bg-muted"
+                  className="h-10 w-10 p-0 data-[state=active]:bg-muted"
                 >
                   <AlignVerticalJustifyStart size={18} />
                 </TabsTrigger>
@@ -652,17 +680,17 @@ const SettingsTabs = () => {
               }
               value={state.editor.selectedElement.styles.flexDirection}
             >
-              <TabsList className="bg-transparent h-fit flex items-center justify-between gap-4 border rounded-md">
+              <TabsList className="flex h-fit items-center justify-between gap-4 rounded-md border bg-transparent">
                 <TabsTrigger
                   value={"row"}
-                  className="w-10 h-10 p-0 data-[state=active]:bg-muted"
+                  className="h-10 w-10 p-0 data-[state=active]:bg-muted"
                 >
                   <Rows size={18} />
                 </TabsTrigger>
 
                 <TabsTrigger
                   value={"column"}
-                  className="w-10 h-10 p-0 data-[state=active]:bg-muted"
+                  className="h-10 w-10 p-0 data-[state=active]:bg-muted"
                 >
                   <Columns size={18} />
                 </TabsTrigger>

@@ -1,8 +1,10 @@
 "use client";
 
 import React from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { Trash } from "lucide-react";
+import { EditorBtns } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { useEditor } from "@/providers/editor/editor-provider";
 import { EditorElement } from "@/providers/editor/editor-reducer";
@@ -11,7 +13,8 @@ type Props = {
   element: EditorElement;
 };
 
-const Text = ({ element }: Props) => {
+const ImageComponent = ({ element }: Props) => {
+  console.log(element);
   const { state, dispatch } = useEditor();
 
   const onBodyClicked = (e: React.MouseEvent) => {
@@ -36,15 +39,23 @@ const Text = ({ element }: Props) => {
     });
   };
 
+  const onDragStart = (e: React.DragEvent, type: EditorBtns) => {
+    if (type === null) return;
+
+    e.dataTransfer.setData("componentType", type);
+  };
+
   return (
     <div
       style={element.styles}
       className={cn(
-        "relative m-1 w-full p-0.5 text-[16px] transition-all",
+        "relative m-1 flex w-full items-center justify-center p-0.5 text-[16px] transition-all",
         state.editor.selectedElement.id === element.id &&
           "!border-solid !border-blue-500",
         !state.editor.liveMode && "border border-dashed border-violet-500",
       )}
+      draggable
+      onDragStart={(e) => onDragStart(e, "image")}
       onClick={onBodyClicked}
     >
       {state.editor.selectedElement.id === element.id &&
@@ -54,26 +65,22 @@ const Text = ({ element }: Props) => {
           </Badge>
         )}
 
-      <span
-        contentEditable={!state.editor.liveMode}
-        onBlur={(e) => {
-          const spanElement = e.target as HTMLSpanElement;
-
-          dispatch({
-            type: "UPDATE_ELEMENT",
-            payload: {
-              elementDetails: {
-                ...element,
-                content: {
-                  innerText: spanElement.innerText,
-                },
-              },
-            },
-          });
-        }}
-      >
-        {!Array.isArray(element.content) && element.content.innerText}
-      </span>
+      {!Array.isArray(element.content) && (
+        <div
+          className="relative overflow-hidden"
+          style={{
+            width: element.styles.width || "560px",
+            height: element.styles.height || "315px",
+          }}
+        >
+          <Image
+            className="object-cover"
+            src={element.content.src || "/assets/plura-log.svg"}
+            fill
+            alt=""
+          />
+        </div>
+      )}
 
       {state.editor.selectedElement.id === element.id &&
         !state.editor.liveMode && (
@@ -89,4 +96,4 @@ const Text = ({ element }: Props) => {
   );
 };
 
-export default Text;
+export default ImageComponent;

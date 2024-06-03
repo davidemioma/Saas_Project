@@ -24,22 +24,22 @@ export default async function FunnelPageEditor({
 
   return (
     <>
-      <div className="lg:hidden w-full h-full flex flex-col items-center justify-center gap-5 -mt-10">
-        <h1 className="text-lg text-center font-bold">
+      <div className="-mt-10 flex h-full w-full flex-col items-center justify-center gap-5 lg:hidden">
+        <h1 className="text-center text-lg font-bold">
           Can&apos;t use website builder on mobile and tablets! Switch to a
           desktop.
         </h1>
 
         <Link
           href={`/subaccount/${subaccountId}/funnels/${funnelId}`}
-          className="flex items-center hover:underline transition-all"
+          className="flex items-center transition-all hover:underline"
         >
-          <ArrowLeft className="w-4 h-4 mr-2" />
+          <ArrowLeft className="mr-2 h-4 w-4" />
           Back to funnel page
         </Link>
       </div>
 
-      <div className="hidden lg:block fixed inset-0 z-[20] bg-background overflow-hidden">
+      <div className="fixed inset-0 z-[20] hidden overflow-hidden bg-background lg:block">
         <EditorProvider
           subaccountId={subaccountId}
           funnelId={funnelId}
@@ -51,7 +51,7 @@ export default async function FunnelPageEditor({
             funnelPage={funnelPage}
           />
 
-          <div className="h-full flex justify-center mr-[385px]">
+          <div className="flex h-full justify-center">
             <FunnelEditor
               subaccountId={subaccountId}
               funnelId={funnelId}

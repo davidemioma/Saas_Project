@@ -1,7 +1,7 @@
 import React from "react";
 import { EditorBtns } from "@/lib/constants";
 
-const TwoColPlaceholder = () => {
+const SectionPlaceholder = () => {
   const onDragState = (e: React.DragEvent, type: EditorBtns) => {
     if (type === null) return;
 
@@ -10,17 +10,15 @@ const TwoColPlaceholder = () => {
 
   return (
     <div
-      className="flex h-14 w-28 gap-1 rounded-lg bg-muted/70 p-2"
+      className="flex h-14 w-14 items-center justify-center rounded-lg bg-muted/70 p-2"
       draggable
       onDragStart={(e) => {
-        onDragState(e, "2Col");
+        onDragState(e, "section");
       }}
     >
-      <div className="h-full w-full rounded-sm border border-dashed border-muted-foreground/50 bg-muted" />
-
       <div className="h-full w-full rounded-sm border border-dashed border-muted-foreground/50 bg-muted" />
     </div>
   );
 };
 
-export default TwoColPlaceholder;
+export default SectionPlaceholder;

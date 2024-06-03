@@ -61,7 +61,7 @@ const FunnelEditor = ({
 
   if (isLoading) {
     return (
-      <div className="w-full h-[calc(100vh-64px)] flex items-center justify-center">
+      <div className="flex h-[calc(100vh-64px)] w-full items-center justify-center">
         <Loader />
       </div>
     );
@@ -69,7 +69,7 @@ const FunnelEditor = ({
 
   if (isError) {
     return (
-      <div className="w-full h-[calc(100vh-64px)] flex items-center justify-center px-4">
+      <div className="flex h-[calc(100vh-64px)] w-full items-center justify-center px-4">
         <span className="text-center text-lg font-medium">
           Could not get funnel page details! Please try again later.
         </span>
@@ -93,17 +93,17 @@ const FunnelEditor = ({
   return (
     <div
       className={cn(
-        "bg-background h-full overflow-scroll scrollbar-hide transition-all rounded-md use-automation-zoom-in",
-        (state.editor.previewMode || state.editor.liveMode) && "p-0 mr-0",
+        "use-automation-zoom-in mr-[385px] h-full overflow-scroll rounded-md bg-gray-300 transition-all scrollbar-hide",
+        (state.editor.previewMode || state.editor.liveMode) && "mr-0 p-0",
         state.editor.device === "Desktop" && "w-full",
-        state.editor.device === "Tablet" && "w-[90%]",
-        state.editor.device === "Mobile" && "w-[420px]"
+        state.editor.device === "Tablet" && "w-[80%]",
+        state.editor.device === "Mobile" && "w-[420px]",
       )}
       onClick={handleClick}
     >
       {state.editor.previewMode && state.editor.liveMode && (
         <Button
-          className="fixed top-0 left-0 z-[100] bg-slate-600 w-6 h-6 p-[2px]"
+          className="fixed left-0 top-0 z-[100] h-6 w-6 bg-slate-600 p-[2px]"
           variant={"ghost"}
           size={"icon"}
           onClick={handlePreview}

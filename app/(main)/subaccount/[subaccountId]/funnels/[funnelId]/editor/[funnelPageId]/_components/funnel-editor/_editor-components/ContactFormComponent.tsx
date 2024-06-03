@@ -3,7 +3,11 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import { Trash } from "lucide-react";
+import { getFunnel } from "@/data/queries";
+import { useRouter } from "next/navigation";
+import { EditorBtns } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
+import ContactForm from "@/components/forms/ContactForm";
 import { useEditor } from "@/providers/editor/editor-provider";
 import { EditorElement } from "@/providers/editor/editor-reducer";
 
@@ -11,8 +15,10 @@ type Props = {
   element: EditorElement;
 };
 
-const Text = ({ element }: Props) => {
-  const { state, dispatch } = useEditor();
+const ContactFormComponent = ({ element }: Props) => {
+  const router = useRouter();
+
+  const { state, dispatch, subaccountId, funnelId, pageDetails } = useEditor();
 
   const onBodyClicked = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -36,6 +42,32 @@ const Text = ({ element }: Props) => {
     });
   };
 
+  const onDragStart = (e: React.DragEvent, type: EditorBtns) => {
+    if (type === null) return;
+
+    e.dataTransfer.setData("componentType", type);
+  };
+
+  const goToNextPage = async () => {
+    if (!state.editor.liveMode) return;
+
+    const funnel = await getFunnel({ subAccountId: subaccountId, funnelId });
+
+    if (!funnel || !pageDetails) return;
+
+    if (funnel.funnelPages.length > pageDetails.order + 1) {
+      const nextPage = funnel.funnelPages.find(
+        (page) => page.order === pageDetails.order + 1,
+      );
+
+      if (!nextPage) return;
+
+      router.push(
+        `${process.env.NEXT_PUBLIC_SCHEME}${funnel.subDomainName}.${process.env.NEXT_PUBLIC_DOMAIN}/${nextPage.pathName}`,
+      );
+    }
+  };
+
   return (
     <div
       style={element.styles}
@@ -45,6 +77,8 @@ const Text = ({ element }: Props) => {
           "!border-solid !border-blue-500",
         !state.editor.liveMode && "border border-dashed border-violet-500",
       )}
+      draggable
+      onDragStart={(e) => onDragStart(e, "contactForm")}
       onClick={onBodyClicked}
     >
       {state.editor.selectedElement.id === element.id &&
@@ -54,26 +88,12 @@ const Text = ({ element }: Props) => {
           </Badge>
         )}
 
-      <span
-        contentEditable={!state.editor.liveMode}
-        onBlur={(e) => {
-          const spanElement = e.target as HTMLSpanElement;
-
-          dispatch({
-            type: "UPDATE_ELEMENT",
-            payload: {
-              elementDetails: {
-                ...element,
-                content: {
-                  innerText: spanElement.innerText,
-                },
-              },
-            },
-          });
-        }}
-      >
-        {!Array.isArray(element.content) && element.content.innerText}
-      </span>
+      <ContactForm
+        subTitle="Contact Us"
+        title="Want a free quote? We can help you"
+        subAccountId={subaccountId}
+        goToNextPage={goToNextPage}
+      />
 
       {state.editor.selectedElement.id === element.id &&
         !state.editor.liveMode && (
@@ -89,4 +109,4 @@ const Text = ({ element }: Props) => {
   );
 };
 
-export default Text;
+export default ContactFormComponent;

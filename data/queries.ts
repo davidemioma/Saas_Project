@@ -113,7 +113,7 @@ export const saveActivityLogNotification = async ({
     if (!foundAgencyId) {
       if (!subAccountId) {
         throw new Error(
-          "You need to provide at least an agency ID or a sub account ID!"
+          "You need to provide at least an agency ID or a sub account ID!",
         );
       }
 
@@ -148,7 +148,7 @@ export const saveActivityLogNotification = async ({
       });
     } else {
       throw new Error(
-        "You need to provide at least an agency ID or a sub account ID!"
+        "You need to provide at least an agency ID or a sub account ID!",
       );
     }
   } catch (err) {
@@ -513,7 +513,7 @@ export const createOrUpdateSubAccount = async ({
 
       if (!subscription?.active && subaccountsCount >= 3) {
         toast.error(
-          "You have reached your max number of sub account! Upgrade to a pro plan to create more sub accounts."
+          "You have reached your max number of sub account! Upgrade to a pro plan to create more sub accounts.",
         );
 
         return null;
@@ -651,7 +651,7 @@ export const updateUser = async (values: UserValidator) => {
 
     if (!user) {
       throw new Error(
-        "Unauthorised, You need to be logged in to perform this action"
+        "Unauthorised, You need to be logged in to perform this action",
       );
     }
 
@@ -700,7 +700,7 @@ export const updateAccountRole = async ({
 
     if (!user) {
       throw new Error(
-        "Unauthorised, You need to be logged in to perform this action"
+        "Unauthorised, You need to be logged in to perform this action",
       );
     }
 
@@ -803,7 +803,7 @@ export const changeUserPermissions = async ({
 };
 
 export const deleteSubAccount = async (
-  subAccountId: string | null | undefined
+  subAccountId: string | null | undefined,
 ) => {
   try {
     if (!subAccountId) {
@@ -879,7 +879,7 @@ export const sendInvite = async ({
 
     if (!subscription?.active && membersCount >= 2) {
       toast.error(
-        "You have reached your max number of invite! Upgrade to a pro plan to send more invites."
+        "You have reached your max number of invite! Upgrade to a pro plan to send more invites.",
       );
 
       return null;
@@ -1152,7 +1152,7 @@ export const updateLaneOrder = async ({
             order: lane.order,
           },
         });
-      })
+      }),
     );
   } catch (err) {
     console.log("UPDATE_LANE_ORDER", err);
@@ -1183,7 +1183,7 @@ export const updateTicketOrder = async ({
             order: ticket.order,
           },
         });
-      })
+      }),
     );
   } catch (err) {
     console.log("UPDATE_TICKET_ORDER", err);
@@ -1612,7 +1612,7 @@ export const updateFunnelPagesOrder = async ({
             order: funnelPage.order,
           },
         });
-      })
+      }),
     );
   } catch (err) {
     console.log("UPDATE_FUNNEL_PAGES_ORDER", err);
@@ -1859,5 +1859,43 @@ export const getMedia = async ({ subAccountId }: { subAccountId: string }) => {
     console.log("GET_MEDIA", err);
 
     return [];
+  }
+};
+
+export const getFunnel = async ({
+  subAccountId,
+  funnelId,
+}: {
+  subAccountId: string;
+  funnelId: string;
+}) => {
+  try {
+    if (!subAccountId || !funnelId) {
+      return null;
+    }
+
+    const funnel = await prismadb.funnel.findUnique({
+      where: {
+        id: funnelId,
+        subAccountId,
+      },
+      select: {
+        id: true,
+        subDomainName: true,
+        funnelPages: {
+          select: {
+            id: true,
+            order: true,
+            pathName: true,
+          },
+        },
+      },
+    });
+
+    return funnel;
+  } catch (err) {
+    console.log("GET_FUNNEL", err);
+
+    return null;
   }
 };

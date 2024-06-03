@@ -50,8 +50,8 @@ const LinkComponent = ({ element }: Props) => {
       className={cn(
         "relative m-1 w-full p-0.5 text-[16px] transition-all",
         state.editor.selectedElement.id === element.id &&
-          "border-solid border-blue-500",
-        !state.editor.liveMode && "border border-dashed border-slate-300",
+          "!border-solid !border-blue-500",
+        !state.editor.liveMode && "border border-dashed border-violet-500",
       )}
       draggable
       onDragStart={(e) => onDragStart(e, "link")}

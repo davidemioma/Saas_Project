@@ -106,7 +106,25 @@ const Container = ({ element }: Props) => {
           },
         });
         break;
+      case "image":
+        dispatch({
+          type: "ADD_ELEMENT",
+          payload: {
+            containerId: element.id,
+            elementDetails: {
+              id: v4(),
+              name: "Image",
+              type: "image",
+              styles: {},
+              content: {
+                src: "/assets/preview.png",
+              },
+            },
+          },
+        });
+        break;
       case "container":
+      case "section":
         dispatch({
           type: "ADD_ELEMENT",
           payload: {
@@ -246,24 +264,27 @@ const Container = ({ element }: Props) => {
         "group relative p-4 transition-all",
         (element.type === "container" ||
           element.type === "2Col" ||
-          element.type === "3Col") &&
+          element.type === "3Col" ||
+          element.type === "section") &&
           "w-full max-w-full",
         element.type === "container" && "h-fit",
+        element.type === "section" && "h-fit",
         element.type === "__body" && "h-full overflow-scroll",
         element.type === "2Col" && "flex flex-col md:flex-row",
         element.type === "3Col" && "grid md:grid-cols-2 lg:grid-cols-3",
         state.editor.selectedElement.id === element.id &&
           !state.editor.liveMode &&
           state.editor.selectedElement.type !== "__body" &&
-          "border-blue-500",
+          "!border-blue-500",
         state.editor.selectedElement.id === element.id &&
           !state.editor.liveMode &&
           state.editor.selectedElement.type === "__body" &&
-          "border-4 border-yellow-400",
+          "!border-4 !border-yellow-400",
         state.editor.selectedElement.id === element.id &&
           !state.editor.liveMode &&
           "border-solid",
-        !state.editor.liveMode && "border-[1px] border-dashed border-slate-300",
+        !state.editor.liveMode &&
+          "border-[1px] border-dashed border-violet-500",
       )}
       draggable={element.type !== "__body"}
       onDragStart={(e) => onDragStart({ e, type: "container" })}

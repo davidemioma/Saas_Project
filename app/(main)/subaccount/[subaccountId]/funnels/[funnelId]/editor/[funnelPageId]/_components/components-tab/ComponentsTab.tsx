@@ -3,8 +3,10 @@ import { EditorBtns } from "@/lib/constants";
 import TextPlaceholder from "./TextPlaceholder";
 import LinkPlaceholder from "./LinkPlaceholder";
 import VideoPlaceholder from "./VideoPlaceholder";
+import ImagePlaceholder from "./ImagePlaceholder";
 import TwoColPlaceholder from "./TwoColPlaceholder";
 import ContactPlaceholder from "./ContactPlaceholder";
+import SectionPlaceholder from "./SectionPlaceholder";
 import CheckoutPlaceholder from "./CheckoutPlaceholder";
 import ThreeColPlaceholder from "./ThreeColPlaceholder";
 import ContainerPlaceholder from "./ContainerPlaceholder";
@@ -43,6 +45,12 @@ const ComponentsTab = () => {
       group: "layout",
     },
     {
+      id: "section",
+      label: "Section",
+      Component: <SectionPlaceholder />,
+      group: "layout",
+    },
+    {
       id: "2Col",
       label: "2 Column",
       Component: <TwoColPlaceholder />,
@@ -53,6 +61,13 @@ const ComponentsTab = () => {
       label: "3 Column",
       Component: <ThreeColPlaceholder />,
       group: "layout",
+    },
+
+    {
+      id: "image",
+      label: "Image",
+      Component: <ImagePlaceholder />,
+      group: "elements",
     },
     {
       id: "video",
