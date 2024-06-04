@@ -2,27 +2,34 @@ import Link from "next/link";
 import { format } from "date-fns";
 import prismadb from "@/lib/prisma";
 import { stripe } from "@/lib/stripe";
-import { AreaChart } from "@tremor/react";
 import { redirect } from "next/navigation";
-import { Progress } from "@/components/ui/progress";
+import { Badge } from "@/components/ui/badge";
+import { AreaChart, BadgeDelta } from "@tremor/react";
 import { Separator } from "@/components/ui/separator";
 import PipelineValue from "@/components/PipelineValue";
 import CircleProgress from "@/components/CircleProgress";
+import SubaccountFunnelChart from "@/components/SubAccountFunnelChart";
 import {
   ClipboardIcon,
   Contact2,
   DollarSign,
-  Goal,
   ShoppingCart,
 } from "lucide-react";
 import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 
 export default async function SubAccountPage({
   params: { subaccountId },
@@ -64,15 +71,25 @@ export default async function SubAccountPage({
       funnels: {
         select: {
           id: true,
+          name: true,
           funnelPages: {
             select: {
-              id: true,
+              name: true,
+              visits: true,
             },
           },
         },
       },
     },
   });
+
+  const funnelPerformanceMetrics = subAccount?.funnels.map((funnel) => ({
+    ...funnel,
+    totalFunnelVisits: funnel.funnelPages.reduce(
+      (total, page) => total + page.visits,
+      0,
+    ),
+  }));
 
   if (!subAccount) {
     return redirect("/agency");
@@ -99,7 +116,7 @@ export default async function SubAccountPage({
       .filter((session) => session.status === "complete")
       .map((session) => ({
         ...session,
-        created: format(session.created, "MM/dd/yyyy").toString(),
+        created: format(session.created, "MM/dd/yyyy"),
         amount_total: session.amount_total ? session.amount_total / 100 : 0,
       }));
 
@@ -107,7 +124,7 @@ export default async function SubAccountPage({
       .filter((session) => session.status === "open")
       .map((session) => ({
         ...session,
-        created: format(session.created, "MM/dd/yyyy").toString(),
+        created: format(session.created, "MM/dd/yyyy"),
         amount_total: session.amount_total ? session.amount_total / 100 : 0,
       }));
 
@@ -235,14 +252,14 @@ export default async function SubAccountPage({
           </Card>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-2">
-          <Card className="relative">
+        <div className="flex flex-col gap-4 lg:flex-row">
+          <Card className="relative max-w-[350px]">
             <CardHeader>
               <CardDescription>Funnel Performance</CardDescription>
             </CardHeader>
 
             <CardContent className="flex flex-col justify-between gap-12 text-sm text-muted-foreground">
-              <div>SubaccountFunnelChart</div>
+              <SubaccountFunnelChart data={funnelPerformanceMetrics || []} />
 
               <span className="text-sm text-muted-foreground">
                 Total page visits across all funnels. Hover over to get more
@@ -253,12 +270,12 @@ export default async function SubAccountPage({
             <Contact2 className="absolute right-4 top-4 text-muted-foreground" />
           </Card>
 
-          <Card>
+          <Card className="flex-1">
             <CardHeader>
               <CardTitle>Checkout Activity</CardTitle>
             </CardHeader>
 
-            <CardContent>
+            <CardContent className="w-full overflow-x-auto">
               <AreaChart
                 className="stroke-primary text-sm"
                 data={sessions || []}
@@ -272,22 +289,66 @@ export default async function SubAccountPage({
           </Card>
         </div>
 
-        <div className="mb-10">
-          <Card>
+        {totalClosedSessions && totalClosedSessions.length > 0 && (
+          <Card className="relative h-[450px] overflow-scroll">
             <CardHeader>
-              <CardTitle>Card Title</CardTitle>
-              <CardDescription>Card Description</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <p>Card Content</p>
-            </CardContent>
-            <CardFooter>
-              <p>Card Footer</p>
-            </CardFooter>
-          </Card>
-        </div>
+              <CardTitle className="flex items-center gap-2">
+                Transition History
+                <BadgeDelta
+                  className="rounded-xl bg-transparent"
+                  deltaType="moderateIncrease"
+                  isIncreasePositive={true}
+                  size="xs"
+                >
+                  +12.3%
+                </BadgeDelta>
+              </CardTitle>
 
-        <div className="h-20" />
+              <Table className="w-full">
+                <TableHeader className="!sticky !top-0">
+                  <TableRow>
+                    <TableHead>Email</TableHead>
+
+                    <TableHead>Status</TableHead>
+
+                    <TableHead>Created Date</TableHead>
+
+                    <TableHead>Value</TableHead>
+                  </TableRow>
+                </TableHeader>
+
+                <TableBody className="truncate font-medium">
+                  {totalClosedSessions.map((session) => (
+                    <TableRow key={session.id}>
+                      <TableCell>
+                        {session.customer_details?.email || "-"}
+                      </TableCell>
+
+                      <TableCell>
+                        <Badge className="bg-emerald-500 dark:text-black">
+                          Paid
+                        </Badge>
+                      </TableCell>
+
+                      <TableCell>
+                        {format(new Date(session?.created), "MM/dd/yyyy")}
+                      </TableCell>
+
+                      <TableCell>
+                        <small>{currency}</small>{" "}
+                        <span className="text-emerald-500">
+                          {session.amount_total}
+                        </span>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardHeader>
+          </Card>
+        )}
+
+        <div className="mb-20" />
       </div>
     </div>
   );
