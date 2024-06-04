@@ -6,6 +6,7 @@ import PricingCard from "./_components/PricingCard";
 import { Separator } from "@/components/ui/separator";
 import { DataTable } from "@/components/ui/data-table";
 import { addOnProducts, pricingCards } from "@/lib/constants";
+import SubscriptionHelper from "./_components/SubscriptionHelper";
 
 export default async function BillingPage({
   params: { agencyId },
@@ -43,7 +44,7 @@ export default async function BillingPage({
 
   //Get price details
   const currentPlanDetails = pricingCards.find(
-    (c) => c.priceId === agency?.subscription?.priceId
+    (c) => c.priceId === agency?.subscription?.priceId,
   );
 
   //Get some charges from stripe just to display it
@@ -56,13 +57,19 @@ export default async function BillingPage({
 
   return (
     <>
-      <h1 className="text-4xl p-4">Billing</h1>
+      <SubscriptionHelper
+        prices={prices.data}
+        customerId={agency?.customerId || ""}
+        active={agency?.subscription?.active === true}
+      />
+
+      <h1 className="p-4 text-4xl">Billing</h1>
 
       <Separator />
 
-      <h2 className="text-2xl p-4">Current Plan</h2>
+      <h2 className="p-4 text-2xl">Current Plan</h2>
 
-      <div className="grid lg:grid-cols-2 2xl:grid-cols-3 gap-8">
+      <div className="grid gap-8 lg:grid-cols-2 2xl:grid-cols-3">
         <PricingCard
           planExists={agency?.subscription?.active || false}
           customerId={agency?.customerId || ""}
@@ -126,7 +133,7 @@ export default async function BillingPage({
         ))} */}
       </div>
 
-      <h2 className="text-2xl pt-10 p-4">Payment History</h2>
+      <h2 className="p-4 pt-10 text-2xl">Payment History</h2>
 
       <DataTable filterValue="id" data={allCharges} columns={columns} />
     </>

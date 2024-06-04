@@ -39,7 +39,7 @@ export const pricingCards = [
     priceId: "",
   },
   {
-    title: "Unlimited Saas",
+    title: "Unlimited SaaS",
     description: "The ultimate agency kit",
     price: "$199.99",
     duration: "month",
