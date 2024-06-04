@@ -1928,3 +1928,36 @@ export const getSubaccountConnectedId = async ({
     return null;
   }
 };
+
+export const getDomainContent = async ({
+  subDomainName,
+}: {
+  subDomainName: string;
+}) => {
+  try {
+    if (!subDomainName) {
+      return null;
+    }
+
+    const domainContent = await prismadb.funnel.findUnique({
+      where: {
+        subDomainName,
+      },
+      select: {
+        id: true,
+        subAccountId: true,
+        funnelPages: {
+          orderBy: {
+            order: "asc",
+          },
+        },
+      },
+    });
+
+    return domainContent;
+  } catch (err) {
+    console.log("GET_DOMAIN_CONTENT", err);
+
+    return null;
+  }
+};
