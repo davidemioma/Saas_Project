@@ -1882,6 +1882,7 @@ export const getFunnel = async ({
       select: {
         id: true,
         subDomainName: true,
+        liveProducts: true,
         funnelPages: {
           select: {
             id: true,
@@ -1895,6 +1896,34 @@ export const getFunnel = async ({
     return funnel;
   } catch (err) {
     console.log("GET_FUNNEL", err);
+
+    return null;
+  }
+};
+
+export const getSubaccountConnectedId = async ({
+  subAccountId,
+}: {
+  subAccountId: string;
+}) => {
+  try {
+    if (!subAccountId) {
+      return null;
+    }
+
+    const subaccount = await prismadb.subAccount.findUnique({
+      where: {
+        id: subAccountId,
+      },
+      select: {
+        id: true,
+        connectAccountId: true,
+      },
+    });
+
+    return subaccount;
+  } catch (err) {
+    console.log("GET_SUBACCOUNT_CONNECTED_ID", err);
 
     return null;
   }

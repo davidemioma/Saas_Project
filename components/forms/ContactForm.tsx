@@ -69,8 +69,8 @@ const ContactForm = ({
   });
 
   const onSubmit = async (values: ContactValidator) => {
-    if (!state.editor.liveMode) {
-      toast.info("You can only add contact in live mode.");
+    if (!state.editor.liveMode || !state.editor.previewMode) {
+      toast.info("You can only add contact in live or preview mode.");
 
       return;
     }
