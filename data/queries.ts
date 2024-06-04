@@ -1961,3 +1961,45 @@ export const getDomainContent = async ({
     return null;
   }
 };
+
+export const getPipelines = async ({
+  subAccountId,
+}: {
+  subAccountId: string;
+}) => {
+  try {
+    if (!subAccountId) {
+      return [];
+    }
+
+    const pipelines = await prismadb.pipeline.findMany({
+      where: {
+        subAccountId,
+      },
+      select: {
+        id: true,
+        name: true,
+        lanes: {
+          select: {
+            id: true,
+            tickets: {
+              select: {
+                id: true,
+                value: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdAt: "desc",
+      },
+    });
+
+    return pipelines;
+  } catch (err) {
+    console.log("GET_PIPELINES", err);
+
+    return [];
+  }
+};
