@@ -4,6 +4,7 @@
 // bunx prisma generate - Do this after creating a new model
 // bunx prisma db push - to push to your database.
 // bunx prisma migrate reset - to reset your databse.
+// bunx prisma migrate dev --name init - to push to your database and save your database history
 // bunx prisma studio - to view your data
 
 generator client {
@@ -11,9 +12,8 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider  = "postgresql"
   url      = env("DATABASE_URL")
-  relationMode = "prisma"
 }
 
 enum Role {
@@ -368,7 +368,7 @@ model ClassName {
   funnelId String
   name String
   color String
-  customData String?  @db.LongText
+  customData String?  @db.Text
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   
@@ -383,7 +383,7 @@ model FunnelPage {
   name String
   pathName String @default("")
   visits Int @default(0)
-  content String? @db.LongText
+  content String? @db.Text
   order Int
   previewImage String? @db.Text
   createdAt DateTime @default(now())

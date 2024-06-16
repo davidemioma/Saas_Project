@@ -124,7 +124,7 @@ export default async function AgencyUserPage({
       <Separator className="my-6" />
 
       {!agency.connectAccountId && (
-        <Card>
+        <Card className="mb-6">
           <CardHeader>
             <CardTitle>Connect Your Stripe</CardTitle>
 
@@ -136,7 +136,7 @@ export default async function AgencyUserPage({
           <CardContent>
             <Link
               href={`/agency/${agency.id}/launchpad`}
-              className="flex w-fit items-center gap-2 rounded-md bg-secondary p-2 text-white"
+              className="flex w-fit items-center gap-2 rounded-md bg-secondary p-2"
             >
               <ClipboardIcon />
               Launch Pad
